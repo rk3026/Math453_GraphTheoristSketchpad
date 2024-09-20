@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GraphTheoristSketchpad")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7b818a3679b70eb162e3b4027fd13e0e11ffcf66")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a866ce4675b13d555657684f7594700a106c14f")]
 [assembly: System.Reflection.AssemblyProductAttribute("GraphTheoristSketchpad")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GraphTheoristSketchpad")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
