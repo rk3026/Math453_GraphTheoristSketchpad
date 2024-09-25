@@ -1,23 +1,11 @@
 ﻿using ScottPlot.Plottables;
 using ScottPlot;
 using ScottPlot.WPF;
-using System.Text;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Printing;
 
 namespace GraphTheoristSketchpad
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         private WpfPlot formsPlot1;
@@ -25,6 +13,15 @@ namespace GraphTheoristSketchpad
         {
             InitializeComponent();
             formsPlot1 = Graph1;
+
+            formsPlot1.Plot.Grid.IsVisible = false; // make the grid background invisible
+
+            // Hide the axis ticks and labels (may want to use):
+            AxisManager axis = formsPlot1.Plot.Axes;
+            axis.Left.IsVisible = false;
+            axis.Bottom.IsVisible = false;
+            axis.Right.IsVisible = false;
+            axis.Top.IsVisible = false;
 
             Scatter = Graph1.Plot.Add.Scatter(Xs, Ys);
             Scatter.LineWidth = 2;
@@ -41,10 +38,20 @@ namespace GraphTheoristSketchpad
         readonly ScottPlot.Plottables.Scatter Scatter;
         int? IndexBeingDragged = null;
 
+        // Helper method to get DPI scaling factor
+        private double GetDpiScale()
+        {
+            PresentationSource source = PresentationSource.FromVisual(this);
+            return source?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
+        }
+
         private void FormsPlot1_MouseDown(object? sender, MouseEventArgs e)
         {
-            Pixel mousePixel = new Pixel(e.GetPosition(Graph1).X,e.GetPosition(Graph1).Y);
-            Coordinates mouseLocation = Graph1.Plot.GetCoordinates(mousePixel);
+            // Apply DPI scaling factor to mouse coordinates
+            double dpiScale = GetDpiScale();
+            Pixel mousePixel = new Pixel(e.GetPosition(formsPlot1).X * dpiScale, e.GetPosition(formsPlot1).Y * dpiScale);
+
+            Coordinates mouseLocation = formsPlot1.Plot.GetCoordinates(mousePixel);
             DataPoint nearest = Scatter.Data.GetNearest(mouseLocation, Graph1.Plot.LastRender);
             IndexBeingDragged = nearest.IsReal ? nearest.Index : null;
 
@@ -61,7 +68,10 @@ namespace GraphTheoristSketchpad
 
         private void FormsPlot1_MouseMove(object? sender, MouseEventArgs e)
         {
-            Pixel mousePixel = new Pixel(e.GetPosition(formsPlot1).X, e.GetPosition(formsPlot1).Y);
+            // Apply DPI scaling factor to mouse coordinates
+            double dpiScale = GetDpiScale();
+            Pixel mousePixel = new Pixel(e.GetPosition(formsPlot1).X * dpiScale, e.GetPosition(formsPlot1).Y * dpiScale);
+
             Coordinates mouseLocation = formsPlot1.Plot.GetCoordinates(mousePixel);
             DataPoint nearest = Scatter.Data.GetNearest(mouseLocation, formsPlot1.Plot.LastRender);
             formsPlot1.Cursor = nearest.IsReal ? Cursors.Hand : Cursors.Arrow;
