@@ -4,6 +4,7 @@ using ScottPlot.WPF;
 using System.Windows;
 using System.Windows.Input;
 using GraphTheoristSketchpad.Interface;
+using System.Collections;
 
 namespace GraphTheoristSketchpad
 {
@@ -12,7 +13,6 @@ namespace GraphTheoristSketchpad
         readonly double[] Xs = Generate.RandomAscending(10);
         readonly double[] Ys = Generate.RandomSample(10);
         readonly GraphRenderer graphRenderer;
-        //Scatter graphRenderer;
         int? IndexBeingDragged = null;
 
         public MainWindow()
@@ -28,13 +28,31 @@ namespace GraphTheoristSketchpad
             axis.Right.IsVisible = false;
             axis.Top.IsVisible = false;
 
-            graphRenderer = new GraphRenderer(Xs, Ys);
+            // make adjacencyMatrix with numEdges edges.
+            int numEdges = 7;
+            BitArray adjacencyMatrix = new BitArray(Xs.Length*numEdges);
+            for (int i = 0; i < numEdges; ++i)
+            {
+                // endpoint represented as two vertex indices
+                int[] edge = Generate.RandomIntegers(2, Xs.Length);
+
+                // make sure endpoints arent same vertex index.
+                if (edge[0] == edge[1])
+                {
+                    edge[1] = (edge[1] + 1) % Xs.Length;
+                }
+
+                // add edge to matrix
+                adjacencyMatrix[numEdges * edge[0] + i] = true;
+                adjacencyMatrix[numEdges * edge[1] + i] = true;
+            }
+
+            graphRenderer = new GraphRenderer(Xs, Ys, adjacencyMatrix);
             //graphRenderer.LineWidth = 2;
             //graphRenderer.MarkerSize = 10;
             //graphRenderer.Smooth = true;
 
             GraphView.Plot.Add.Plottable(graphRenderer);
-            //graphRenderer = GraphView.Plot.Add.ScatterPoints(Xs, Ys);
 
             GraphView.MouseMove += FormsPlot1_MouseMove;
             GraphView.MouseDown += FormsPlot1_MouseDown;
