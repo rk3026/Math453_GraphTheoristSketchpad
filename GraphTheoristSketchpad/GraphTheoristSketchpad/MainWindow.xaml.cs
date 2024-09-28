@@ -8,29 +8,27 @@ namespace GraphTheoristSketchpad
 {
     public partial class MainWindow : Window
     {
-        private WpfPlot formsPlot1;
         public MainWindow()
         {
             InitializeComponent();
-            formsPlot1 = Graph1;
 
-            formsPlot1.Plot.Grid.IsVisible = false; // make the grid background invisible
+            GraphView.Plot.Grid.IsVisible = false; // make the grid background invisible
 
             // Hide the axis ticks and labels (may want to use):
-            AxisManager axis = formsPlot1.Plot.Axes;
+            AxisManager axis = GraphView.Plot.Axes;
             axis.Left.IsVisible = false;
             axis.Bottom.IsVisible = false;
             axis.Right.IsVisible = false;
             axis.Top.IsVisible = false;
 
-            Scatter = Graph1.Plot.Add.Scatter(Xs, Ys);
+            Scatter = GraphView.Plot.Add.Scatter(Xs, Ys);
             Scatter.LineWidth = 2;
             Scatter.MarkerSize = 10;
             Scatter.Smooth = true;
 
-            formsPlot1.MouseMove += FormsPlot1_MouseMove;
-            formsPlot1.MouseDown += FormsPlot1_MouseDown;
-            formsPlot1.MouseUp += FormsPlot1_MouseUp;
+            GraphView.MouseMove += FormsPlot1_MouseMove;
+            GraphView.MouseDown += FormsPlot1_MouseDown;
+            GraphView.MouseUp += FormsPlot1_MouseUp;
         }
 
         readonly double[] Xs = Generate.RandomAscending(10);
@@ -49,38 +47,38 @@ namespace GraphTheoristSketchpad
         {
             // Apply DPI scaling factor to mouse coordinates
             double dpiScale = GetDpiScale();
-            Pixel mousePixel = new Pixel(e.GetPosition(formsPlot1).X * dpiScale, e.GetPosition(formsPlot1).Y * dpiScale);
+            Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
 
-            Coordinates mouseLocation = formsPlot1.Plot.GetCoordinates(mousePixel);
-            DataPoint nearest = Scatter.Data.GetNearest(mouseLocation, Graph1.Plot.LastRender);
+            Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
+            DataPoint nearest = Scatter.Data.GetNearest(mouseLocation, GraphView.Plot.LastRender);
             IndexBeingDragged = nearest.IsReal ? nearest.Index : null;
 
             if (IndexBeingDragged.HasValue)
-                Graph1.Interaction.Disable();
+                GraphView.Interaction.Disable();
         }
 
         private void FormsPlot1_MouseUp(object? sender, MouseEventArgs e)
         {
             IndexBeingDragged = null;
-            formsPlot1.Interaction.Enable();
-            formsPlot1.Refresh();
+            GraphView.Interaction.Enable();
+            GraphView.Refresh();
         }
 
         private void FormsPlot1_MouseMove(object? sender, MouseEventArgs e)
         {
             // Apply DPI scaling factor to mouse coordinates
             double dpiScale = GetDpiScale();
-            Pixel mousePixel = new Pixel(e.GetPosition(formsPlot1).X * dpiScale, e.GetPosition(formsPlot1).Y * dpiScale);
+            Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
 
-            Coordinates mouseLocation = formsPlot1.Plot.GetCoordinates(mousePixel);
-            DataPoint nearest = Scatter.Data.GetNearest(mouseLocation, formsPlot1.Plot.LastRender);
-            formsPlot1.Cursor = nearest.IsReal ? Cursors.Hand : Cursors.Arrow;
+            Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
+            DataPoint nearest = Scatter.Data.GetNearest(mouseLocation, GraphView.Plot.LastRender);
+            GraphView.Cursor = nearest.IsReal ? Cursors.Hand : Cursors.Arrow;
 
             if (IndexBeingDragged.HasValue)
             {
                 Xs[IndexBeingDragged.Value] = mouseLocation.X;
                 Ys[IndexBeingDragged.Value] = mouseLocation.Y;
-                formsPlot1.Refresh();
+                GraphView.Refresh();
             }
         }
     }

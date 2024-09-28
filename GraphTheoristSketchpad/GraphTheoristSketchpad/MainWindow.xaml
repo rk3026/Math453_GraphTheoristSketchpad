@@ -10,7 +10,7 @@
         Title="MainWindow" Height="450" Width="800">
     
     <Grid>
-        <ScottPlot:WpfPlot x:Name="Graph1" />
+        <ScottPlot:WpfPlot x:Name="GraphView" />
 
     </Grid>
 </Window>
