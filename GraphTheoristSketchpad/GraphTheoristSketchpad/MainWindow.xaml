@@ -8,9 +8,61 @@
         
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    
-    <Grid>
-        <ScottPlot:WpfPlot x:Name="GraphView" />
 
+    <Window.Resources>
+        <Style TargetType="Button" x:Key="ToolButtonStyle">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="BorderBrush" Value="DarkGray"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="Selected">
+                    <Setter Property="Background" Value="LightBlue"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Menu bar will size automatically -->
+            <RowDefinition Height="Auto"/>
+            <!-- Toolbar will size automatically -->
+            <RowDefinition Height="*"/>
+            <!-- Graph will take the remaining space -->
+        </Grid.RowDefinitions>
+
+        <!-- Menu Bar -->
+        <Menu Grid.Row="0">
+            <MenuItem Header="File">
+                <MenuItem Header="New" Click="MenuItem_New_Click"/>
+                <MenuItem Header="Open" Click="MenuItem_Open_Click"/>
+                <MenuItem Header="Save" Click="MenuItem_Save_Click"/>
+                <MenuItem Header="Exit" Click="MenuItem_Exit_Click"/>
+            </MenuItem>
+            <MenuItem Header="Help">
+                <MenuItem Header="About" Click="MenuItem_About_Click"/>
+            </MenuItem>
+        </Menu>
+
+        <ToolBarTray Grid.Row="1">
+            <!-- Place Toolbar in the second row -->
+            <ToolBar>
+                <Button Name="btnAddVertex" Content="Add Vertex" Click="btnAddVertex_Click" Style="{StaticResource ToolButtonStyle}" />
+                <Button Name="btnAddEdge" Content="Add Edge" Click="btnAddEdge_Click" Style="{StaticResource ToolButtonStyle}" />
+                <Button Name="btnErase" Content="Erase" Click="btnErase_Click" Style="{StaticResource ToolButtonStyle}" />
+                <Button Name="btnView" Content="View" Click="btnView_Click" Style="{StaticResource ToolButtonStyle}" />
+            </ToolBar>
+        </ToolBarTray>
+
+        <ScottPlot:WpfPlot x:Name="GraphView" Margin="0" Grid.Row="2"/>
+        
+        
+        <!-- Graph in the third row -->
     </Grid>
 </Window>
