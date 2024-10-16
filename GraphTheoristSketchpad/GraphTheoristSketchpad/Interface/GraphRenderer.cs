@@ -51,7 +51,8 @@ namespace GraphTheoristSketchpad.Interface
                 Coordinates centerCoordinates = new(Xs[i], Ys[i]);
                 Pixel centerPixel = Axes.GetPixel(centerCoordinates);
                 FillStyle.Color = Colormap.GetColor(i / (Xs.Length - 1.0));
-                Drawing.DrawCircle(rp.Canvas, centerPixel, Radius, FillStyle, paint);
+                //Drawing.DrawCircle(rp.Canvas, centerPixel, Radius, FillStyle, paint);
+                Drawing.DrawMarker(rp.Canvas, paint, centerPixel, new MarkerStyle(MarkerShape.FilledCircle, 20, FillStyle.Color));
             }
         }
 
