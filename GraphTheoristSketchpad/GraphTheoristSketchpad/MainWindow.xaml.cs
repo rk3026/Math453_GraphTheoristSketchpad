@@ -6,21 +6,17 @@ using System.Windows.Input;
 using System.Collections;
 using GraphTheoristSketchpad.Interface;
 using System.Windows.Controls;
-using System.Windows.Media;
+using GraphTheoristSketchpad.Logic;
 
 namespace GraphTheoristSketchpad
 {
     public partial class MainWindow : Window
     {
-        private static double VERTEX_LABEL_OFFSET_Y = 0.1;
         enum ToolMode { None, AddVertex, AddEdge, Erase, View }
         ToolMode currentMode = ToolMode.View;
         private List<Button> toolbarButtons;
-        private double[] Xs = Generate.RandomAscending(10);
-        private double[] Ys = Generate.RandomSample(10);
-        readonly GraphRenderer graphRenderer;
-        int? IndexBeingDragged = null;
-        private Dictionary<int, Text> vertexIndexAndLabels = new Dictionary<int, Text>();
+        public GraphRendererPlot graphRendererPlot = new GraphRendererPlot();
+        Vertex VertexBeingDragged = null;
 
         public MainWindow()
         {
@@ -42,33 +38,7 @@ namespace GraphTheoristSketchpad
             axis.Right.IsVisible = false;
             axis.Top.IsVisible = false;
 
-            // Make adjacencyMatrix with numEdges edges.
-            int numEdges = 7;
-            BitArray adjacencyMatrix = new BitArray(Xs.Length * numEdges);
-            for (int i = 0; i < numEdges; ++i)
-            {
-                int[] edge = Generate.RandomIntegers(2, Xs.Length);
-                if (edge[0] == edge[1])
-                {
-                    edge[1] = (edge[1] + 1) % Xs.Length;
-                }
-
-                adjacencyMatrix[numEdges * edge[0] + i] = true;
-                adjacencyMatrix[numEdges * edge[1] + i] = true;
-            }
-
-            for (int i = 0; i < Xs.Length; i++)
-            {
-                Coordinates c = new ScottPlot.Coordinates(Xs[i], Ys[i] + VERTEX_LABEL_OFFSET_Y);
-                Text t = GraphView.Plot.Add.Text("v" + i, c);
-                t.LabelFontSize = 25;
-                t.LabelFontColor = Generate.RandomColor(128);
-                t.LabelBold = true;
-                vertexIndexAndLabels[i] = t;
-            }
-
-            graphRenderer = new GraphRenderer(Xs, Ys, adjacencyMatrix);
-            GraphView.Plot.Add.Plottable(graphRenderer);
+            GraphView.Plot.Add.Plottable(graphRendererPlot);
 
             GraphView.MouseMove += FormsPlot1_MouseMove;
             GraphView.MouseLeftButtonDown += FormsPlot1_MouseLeftButtonDown;
@@ -81,10 +51,11 @@ namespace GraphTheoristSketchpad
             double dpiScale = GetDpiScale();
             Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
             Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
-            DataPoint nearest = graphRenderer.Data.GetNearest(mouseLocation, GraphView.Plot.LastRender);
+            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation);
+            //DataPoint nearest = graphRendererPlot.Data.GetNearest(mouseLocation, GraphView.Plot.LastRender);
 
             // Show context menu if right-clicked on a vertex
-            if (nearest.IsReal)
+            if (nearestVertex != null)
             {
                 // clear existing menu items
                 GraphView.Menu?.Clear();
@@ -92,8 +63,6 @@ namespace GraphTheoristSketchpad
                 // add menu items with custom actions
                 GraphView.Menu?.Add("Rename", (GraphView) =>
                 {
-                    Text t = vertexIndexAndLabels[nearest.Index];
-                    t.LabelText = "changed"; // TODO
                     GraphView.Refresh();
                 });
 
@@ -148,27 +117,42 @@ namespace GraphTheoristSketchpad
 
         private void FormsPlot1_MouseLeftButtonDown(object? sender, MouseEventArgs e)
         {
+            // Dragging Vertices:
             double dpiScale = GetDpiScale();
             Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
 
             Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
-            DataPoint nearest = graphRenderer.Data.GetNearest(mouseLocation, GraphView.Plot.LastRender);
-            IndexBeingDragged = nearest.IsReal ? nearest.Index : null;
 
-            // Handle vertex creation
-            if (currentMode == ToolMode.AddVertex && !IndexBeingDragged.HasValue)
+            // Don't modify if your mouse is clicking directly on a vertex
+            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
+            if (nearestVertex != null)
             {
-                // Add a new vertex at the mouse location
-                AddVertex(mouseLocation.X, mouseLocation.Y);
+                GraphView.Interaction.Disable();
+                return;
             }
 
-            if (IndexBeingDragged.HasValue)
-                GraphView.Interaction.Disable();
+            // Based on current mode, modify the graph:
+            switch (currentMode)
+            {
+                case ToolMode.AddVertex:
+                    Console.WriteLine("Adding a vertex at: " + mouseLocation.X + ", " + mouseLocation.Y);
+                    AddVertex(mouseLocation.X, mouseLocation.Y);
+                    break;
+                case ToolMode.AddEdge:
+                    break;
+                case ToolMode.Erase:
+                    break;
+                case ToolMode.View:
+                    break;
+                default:
+                    break;
+
+            }
         }
 
         private void FormsPlot1_MouseLeftButtonUp(object? sender, MouseEventArgs e)
         {
-            IndexBeingDragged = null;
+            VertexBeingDragged = null;
             GraphView.Interaction.Enable();
             GraphView.Refresh();
         }
@@ -179,21 +163,14 @@ namespace GraphTheoristSketchpad
             Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
 
             Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
-            DataPoint nearest = graphRenderer.Data.GetNearest(mouseLocation, GraphView.Plot.LastRender);
-            GraphView.Cursor = nearest.IsReal ? Cursors.Hand : Cursors.Arrow;
+            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
 
-            if (IndexBeingDragged.HasValue)
+            GraphView.Cursor = nearestVertex != null ? Cursors.Hand : Cursors.Arrow;
+
+            if (VertexBeingDragged != null)
             {
                 // Update the position of the vertex
-                Xs[IndexBeingDragged.Value] = mouseLocation.X;
-                Ys[IndexBeingDragged.Value] = mouseLocation.Y;
 
-                // Update the position of the associated label
-                var labelToUpdate = vertexIndexAndLabels[IndexBeingDragged.Value];
-                if (labelToUpdate != null)
-                {
-                    labelToUpdate.Location = new Coordinates(mouseLocation.X, mouseLocation.Y + VERTEX_LABEL_OFFSET_Y);
-                }
 
                 GraphView.Refresh();
             }
@@ -202,30 +179,10 @@ namespace GraphTheoristSketchpad
 
         private void AddVertex(double x, double y)
         {
-            /*
-            // Add the new vertex to the Xs and Ys arrays
-            Array.Resize(ref Xs, Xs.Length + 1);
-            Array.Resize(ref Ys, Ys.Length + 1);
-            Xs[^1] = x; // Last index
-            Ys[^1] = y; // Last index
-
-            // Create a new DataPoint for the vertex
-            ScottPlot.Coordinates coords = new ScottPlot.Coordinates(x, y);
-            var newVertex = new DataPoint();
-            newVertex.Coordinates = coords;
-
-            // Create a new label and tie it to the vertex
-            var label = GraphView.Plot.Add.Text($"v{Xs.Length - 1}", new Coordinates(x, y));
-            label.LabelFontSize = 10;
-            label.LabelFontColor = Generate.RandomColor(128);
-            label.LabelBold = true;
-
-            // Associate the vertex with its label
-            vertexIndexAndLabels[newVertex] = label;
-
-            // Refresh the graph renderer
-            GraphView.Refresh();
-            */
+            Graph g = graphRendererPlot.graph;
+            Vertex newVertex = new Vertex(x, y);
+            newVertex.Style.FillColor = new Color(5, 5, 50, 255);
+            g.Add(newVertex);
         }
 
 
