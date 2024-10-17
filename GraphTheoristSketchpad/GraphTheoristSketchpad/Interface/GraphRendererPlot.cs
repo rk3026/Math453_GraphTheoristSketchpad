@@ -27,12 +27,55 @@ namespace GraphTheoristSketchpad.Interface
 
             CoordinateLine[] edges = graph.getEdges();
 
+            Dictionary<CoordinateLine, int> sameEdges =
+                new Dictionary<CoordinateLine, int>();
+
+            foreach(CoordinateLine edge in edges)
+            {
+                int edgeCount;
+                if(sameEdges.TryGetValue(edge, out edgeCount))
+                {
+                    sameEdges[edge] = edgeCount+1;
+                }
+                else
+                {
+                    sameEdges.Add(edge, 1);
+                }
+            }
+            paint.StrokeWidth = 5;
+            paint.Style = SKPaintStyle.Stroke;
+            paint.Color = SKColors.Red;
+            foreach (CoordinateLine edge in sameEdges.Keys)
+            {
+                for(int i = 1; i <= sameEdges[edge]; ++i)
+                {
+                    PixelLine pixelEdge = Axes.GetPixelLine(edge);
+                    //Pixel offset = new Pixel(i * 10, i * 10);
+                    //pixelEdge = new PixelLine(pixelEdge.Pixel1+offset, pixelEdge.Pixel2+offset);
+                    //Drawing.DrawLine(rp.Canvas, paint, pixelEdge);
+                    SKPath path = new SKPath();
+                    path.MoveTo(pixelEdge.X1, pixelEdge.Y1);
+                    //path.MoveTo(0, 0);
+                    //path.LineTo(pixelEdge.X2, pixelEdge.Y2);
+
+                    //path.ArcTo(pixelEdge.X1, pixelEdge.Y1, pixelEdge.X2, pixelEdge.Y2, i*10);
+                    path.AddArc(new SKRect(pixelEdge.X1, pixelEdge.Y1, pixelEdge.X2, pixelEdge.Y2), 0, 180);
+
+                    //path.AddPoly([new SKPoint(pixelEdge.X2, pixelEdge.Y2)], false)
+                    rp.Canvas.DrawPath(path, paint);
+                    
+                }
+            }
+
+            /*
+            // Draw edges
             for (int i = 0; i < edges.Length; ++i)
             {
                 PixelLine pixelEdge = Axes.GetPixelLine(edges[i]);
                 Drawing.DrawLine(rp.Canvas, paint, pixelEdge);
-            }
+            }*/
 
+            // Draw vertices and their labels
             foreach (Vertex v in graph.Vertices)
             {
                 // Draw the actual vertex:
