@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Collections;
 using SkiaSharp;
 using MathNet.Numerics.LinearAlgebra;
+using ScottPlot;
 
 namespace GraphTheoristSketchpad.Logic
 {
@@ -52,6 +53,46 @@ namespace GraphTheoristSketchpad.Logic
         public void AddEdge(Vertex start, Vertex end)
         {
             this.AddEdge(start, end, 1d);
+        }
+
+        private CoordinateLine[] getEdges()
+        {
+            CoordinateLine[] edges = new CoordinateLine[this.matrix.ColumnCount];
+
+            for (int i = 0; i < this.matrix.ColumnCount; ++i)
+            {
+                Vector<double> column = this.matrix.Column(i);
+
+                // line start
+                Coordinates end1 = new Coordinates(0, 0);
+
+                // line end
+                Coordinates end2 = new Coordinates(1, 1);
+
+                // get first line endpoint
+                for (int j = 0; j < column.Count; ++j)
+                {
+                    // check if vertex is incident on edge
+                    if (column[j] > 0d)
+                    {
+                        end1 = this.vertices[j].Location;
+                    }
+                }
+
+                // get second line endpoint
+                for (int j = column.Count - 1; j >= 0; --j)
+                {
+                    // check if vertex is incident on edge
+                    if (column[j] > 0d)
+                    {
+                        end2 = this.vertices[j].Location;
+                    }
+                }
+
+                edges[i] = new CoordinateLine(end1, end2);
+            }
+
+            return edges;
         }
     }
 }
