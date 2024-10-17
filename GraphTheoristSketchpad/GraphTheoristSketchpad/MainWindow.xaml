@@ -57,6 +57,7 @@
                 <Button Name="btnAddEdge" Content="Add Edge" Click="btnAddEdge_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnErase" Content="Erase" Click="btnErase_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnView" Content="View" Click="btnView_Click" Style="{StaticResource ToolButtonStyle}" />
+                <Button Name="btnEdit" Content="Edit" Click="btnEdit_Click" Style="{StaticResource ToolButtonStyle}" />
             </ToolBar>
         </ToolBarTray>
 

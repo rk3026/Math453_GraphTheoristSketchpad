@@ -45,8 +45,7 @@ namespace GraphTheoristSketchpad.Logic
 
         public CoordinateLine[] getEdges()
         {
-            return new CoordinateLine[4];
-            //throw new NotImplementedException();
+            return matrix.getEdges();
         }
 
         public bool Add(Vertex item)

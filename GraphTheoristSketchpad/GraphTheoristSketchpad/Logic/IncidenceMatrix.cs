@@ -21,6 +21,7 @@ namespace GraphTheoristSketchpad.Logic
         public IncidenceMatrix()
         {
             vertices = new List<Vertex>();
+            matrix = CreateMatrix.Sparse<double>(0,0);
         }
 
         // Adds a column to the matrix for this new edge.
@@ -43,7 +44,7 @@ namespace GraphTheoristSketchpad.Logic
             }
 
             // new matrix with new edge.
-            Matrix<double> newMatrix = CreateMatrix.Sparse<double>(vertices.Count, matrix.ColumnCount);
+            Matrix<double> newMatrix = CreateMatrix.Sparse<double>(vertices.Count, matrix.ColumnCount+1);
             newMatrix.SetSubMatrix(0, 0, matrix);
             newMatrix[startIndex, newMatrix.ColumnCount - 1] = weight;
             newMatrix[endIndex, newMatrix.ColumnCount - 1] = weight;
@@ -55,7 +56,7 @@ namespace GraphTheoristSketchpad.Logic
             this.AddEdge(start, end, 1d);
         }
 
-        private CoordinateLine[] getEdges()
+        public CoordinateLine[] getEdges()
         {
             CoordinateLine[] edges = new CoordinateLine[this.matrix.ColumnCount];
 
