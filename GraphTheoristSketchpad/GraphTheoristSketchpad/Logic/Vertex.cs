@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace GraphTheoristSketchpad.Logic
 {
     // Styling information and placement of a graph vertex
-    internal class Vertex
+    public class Vertex
     {
         // display name
         public string Label { get; set; }

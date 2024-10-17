@@ -1,15 +1,12 @@
-﻿using System;
+﻿using ScottPlot;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GraphTheoristSketchpad.Logic
 {
-    class Graph : ISet<Vertex>
+    public class Graph
     {
-        private ISet<Vertex> Vertices { get; }
+        public ISet<Vertex> Vertices { get; } = new HashSet<Vertex>();
+        public ISet<Edge> Edges { get; } = new HashSet<Edge>();
 
         public int Count => throw new NotImplementedException();
 
@@ -19,9 +16,39 @@ namespace GraphTheoristSketchpad.Logic
         {
         }
 
+        public Vertex? getNearestVertex(Coordinates location, double maxDistance = 15)
+        {
+            double closestCoordinates = double.MaxValue;
+            Vertex closestVertex = null;
+            foreach (Vertex v in Vertices)
+            {
+                double currentDistance = new CoordinateLine(v.Location, location).Length;
+                if (currentDistance < closestCoordinates)
+                {
+                    closestCoordinates = currentDistance;
+                    closestVertex = v;
+                }
+            }
+            if (closestCoordinates > maxDistance)
+            {
+                return null;
+            }
+            else
+            {
+                return closestVertex;
+            }
+        }
+
+        public CoordinateLine[] getEdges()
+        {
+            return new CoordinateLine[4];
+            //throw new NotImplementedException();
+        }
+
         public bool Add(Vertex item)
         {
-            throw new NotImplementedException();
+            Vertices.Add(item);
+            return true;
         }
 
         public void ExceptWith(IEnumerable<Vertex> other)
@@ -74,11 +101,6 @@ namespace GraphTheoristSketchpad.Logic
             throw new NotImplementedException();
         }
 
-        void ICollection<Vertex>.Add(Vertex item)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Clear()
         {
             throw new NotImplementedException();
@@ -100,11 +122,6 @@ namespace GraphTheoristSketchpad.Logic
         }
 
         public IEnumerator<Vertex> GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
         {
             throw new NotImplementedException();
         }
