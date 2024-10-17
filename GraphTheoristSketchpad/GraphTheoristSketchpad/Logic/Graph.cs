@@ -8,12 +8,16 @@ namespace GraphTheoristSketchpad.Logic
         public ISet<Vertex> Vertices { get; } = new HashSet<Vertex>();
         public ISet<Edge> Edges { get; } = new HashSet<Edge>();
 
+
         public int Count => throw new NotImplementedException();
 
         public bool IsReadOnly => throw new NotImplementedException();
 
+        private IncidenceMatrix matrix;
+
         public Graph()
         {
+            matrix = new IncidenceMatrix();
         }
 
         public Vertex? getNearestVertex(Coordinates location, double maxDistance = 15)
@@ -48,6 +52,12 @@ namespace GraphTheoristSketchpad.Logic
         public bool Add(Vertex item)
         {
             Vertices.Add(item);
+            return true;
+        }
+
+        public bool AddEdge(Vertex start, Vertex end)
+        {
+            this.matrix.AddEdge(start, end);
             return true;
         }
 
