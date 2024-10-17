@@ -25,44 +25,80 @@ namespace GraphTheoristSketchpad.Interface
             FillStyle FillStyle = new();
             using SKPaint paint = new();
 
+            // Get all edges
             CoordinateLine[] edges = graph.getEdges();
 
+            // Loop through the edges and draw arcs for parallel edges
             for (int i = 0; i < edges.Length; ++i)
             {
                 PixelLine pixelEdge = Axes.GetPixelLine(edges[i]);
-                Drawing.DrawLine(rp.Canvas, paint, pixelEdge);
+
+                // Calculate the middle point between the two vertices
+                Pixel start = pixelEdge.Pixel1;
+                Pixel end = pixelEdge.Pixel2;
+
+                // Calculate control point for the quadratic Bezier curve
+                // Offset for each parallel edge to spread the arcs apart
+                float offset = (i + 1) * 10; // Adjust offset size for parallel edges
+                Pixel controlPoint = GetControlPointForArc(start, end, offset);
+
+                // Draw quadratic Bézier curve as an arc
+                SKPath path = new SKPath();
+                path.MoveTo(start.X, start.Y);
+                path.QuadTo(controlPoint.X, controlPoint.Y, end.X, end.Y);
+
+                paint.IsAntialias = true;
+                paint.StrokeWidth = 2;
+                paint.Style = SKPaintStyle.Stroke;
+
+                // Draw the arc on the canvas
+                rp.Canvas.DrawPath(path, paint);
             }
 
+            // Draw vertices after edges (as in your original code)
             foreach (Vertex v in graph.Vertices)
             {
-                // Draw the actual vertex:
                 Coordinates centerCoordinates = v.Location;
                 Pixel centerPixel = Axes.GetPixel(centerCoordinates);
-                //Drawing.DrawCircle(rp.Canvas, centerPixel, VertexRadius, FillStyle, paint);
                 Drawing.DrawMarker(rp.Canvas, paint, centerPixel, v.Style);
 
-                // Draw the label for the vertex:
-                // Set up SKPaint for text (label)
                 using SKPaint textPaint = new SKPaint
                 {
-                    Color = SKColors.Black, // You can change this to any color you prefer
-                    TextSize = 20,          // Size of the text
-                    IsAntialias = true,     // Smoothens the text rendering
-                    Typeface = SKTypeface.FromFamilyName("Arial"), // You can change the font if needed
+                    Color = SKColors.Black,
+                    TextSize = 20,
+                    IsAntialias = true,
+                    Typeface = SKTypeface.FromFamilyName("Arial"),
                 };
 
-                // Draw the label for the vertex
                 string vertexLabel = v.Label;
                 if (!string.IsNullOrEmpty(vertexLabel))
                 {
-                    // Draw the text slightly offset from the center of the vertex
-                    float textOffsetX = 10;  // Horizontal offset for label position
-                    float textOffsetY = -10; // Vertical offset for label position
-
+                    float textOffsetX = 10;
+                    float textOffsetY = -10;
                     rp.Canvas.DrawText(vertexLabel, centerPixel.X + textOffsetX, centerPixel.Y + textOffsetY, textPaint);
                 }
-
             }
         }
+
+        // Function to calculate the control point for the arc
+        private Pixel GetControlPointForArc(Pixel start, Pixel end, float offset)
+        {
+            // Calculate the midpoint between the two vertices
+            float midX = (start.X + end.X) / 2;
+            float midY = (start.Y + end.Y) / 2;
+
+            // Find the perpendicular direction for the control point
+            float dx = end.X - start.X;
+            float dy = end.Y - start.Y;
+
+            // Normalize the direction vector and apply the offset for curvature
+            float length = (float)Math.Sqrt(dx * dx + dy * dy);
+            float offsetX = -dy / length * offset;
+            float offsetY = dx / length * offset;
+
+            // Create the control point at the offset
+            return new Pixel(midX + offsetX, midY + offsetY);
+        }
+
     }
 }
