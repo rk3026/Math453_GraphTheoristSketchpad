@@ -2,6 +2,7 @@
 using ScottPlot;
 using ScottPlot.Plottables;
 using SkiaSharp;
+using System.Windows.Input;
 
 namespace GraphTheoristSketchpad.Interface
 {
@@ -43,58 +44,42 @@ namespace GraphTheoristSketchpad.Interface
                     sameEdges.Add(edge, 1);
                 }
             }
+
+            // edge style
             paint.StrokeWidth = 5;
             paint.Style = SKPaintStyle.Stroke;
             paint.Color = SKColors.Red;
+
+            // draw edges
             foreach (CoordinateLine edge in sameEdges.Keys)
             {
                 for(int i = 1; i <= sameEdges[edge]; ++i)
                 {
                     PixelLine pixelEdge = Axes.GetPixelLine(edge);
-                    //Pixel offset = new Pixel(i * 10, i * 10);
-                    //pixelEdge = new PixelLine(pixelEdge.Pixel1+offset, pixelEdge.Pixel2+offset);
-                    //Drawing.DrawLine(rp.Canvas, paint, pixelEdge);
-                    SKPath path = new SKPath();
-                    path.MoveTo(pixelEdge.X1, pixelEdge.Y1);
-                    //path.MoveTo(0, 0);
-                    //path.LineTo(pixelEdge.X2, pixelEdge.Y2);
-
-                    //path.ArcTo(pixelEdge.X1, pixelEdge.Y1, pixelEdge.X2, pixelEdge.Y2, i*10);
-                    path.AddArc(new SKRect(pixelEdge.X1, pixelEdge.Y1, pixelEdge.X2, pixelEdge.Y2), 0, 180);
-
-                    //path.AddPoly([new SKPoint(pixelEdge.X2, pixelEdge.Y2)], false)
-                    rp.Canvas.DrawPath(path, paint);
-                    
-                }
-            }
-
-            // Draw edges
-            for (int i = 0; i < edges.Length; ++i)
-            {
                 PixelLine pixelEdge = Axes.GetPixelLine(edges[i]);
 
-                // Calculate the middle point between the two vertices
-                Pixel start = pixelEdge.Pixel1;
-                Pixel end = pixelEdge.Pixel2;
+                    // Calculate the middle point between the two vertices
+                    Pixel start = pixelEdge.Pixel1;
+                    Pixel end = pixelEdge.Pixel2;
 
-                // Calculate control point for the quadratic Bezier curve
-                // Offset for each parallel edge to spread the arcs apart
-                float offset = (i + 1) * 10; // Adjust offset size for parallel edges
-                Pixel controlPoint = GetControlPointForArc(start, end, offset);
+                    // Calculate control point for the quadratic Bezier curve
+                    // Offset for each parallel edge to spread the arcs apart
+                    float offset = (i+((sameEdges[edge]+1)%2))/2*(-2*(i%2)+1) * 40; // Adjust offset size for parallel edges
+                    Pixel controlPoint = GetControlPointForArc(start, end, offset);
 
-                // Draw quadratic Bézier curve as an arc
-                SKPath path = new SKPath();
-                path.MoveTo(start.X, start.Y);
-                path.QuadTo(controlPoint.X, controlPoint.Y, end.X, end.Y);
+                    // Draw quadratic Bézier curve as an arc
+                    SKPath path = new SKPath();
+                    path.MoveTo(start.X, start.Y);
+                    path.QuadTo(controlPoint.X, controlPoint.Y, end.X, end.Y);
 
-                paint.IsAntialias = true;
-                paint.StrokeWidth = 2;
-                paint.Style = SKPaintStyle.Stroke;
-
-                // Draw the arc on the canvas
-                rp.Canvas.DrawPath(path, paint);
-                Drawing.DrawLine(rp.Canvas, paint, pixelEdge);
+                    paint.IsAntialias = true;
+                    paint.StrokeWidth = 2;
+                    paint.Style = SKPaintStyle.Stroke;
+                    // Draw the arc on the canvas
+                    rp.Canvas.DrawPath(path, paint);
+                }
             }
+            }*/
 
             // Draw vertices after edges (as in your original code)
             // Draw vertices and their labels
