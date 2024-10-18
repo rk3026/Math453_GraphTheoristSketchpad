@@ -68,7 +68,6 @@ namespace GraphTheoristSketchpad.Interface
                 }
             }
 
-            /*
             // Draw edges
             for (int i = 0; i < edges.Length; ++i)
             {
@@ -94,9 +93,8 @@ namespace GraphTheoristSketchpad.Interface
 
                 // Draw the arc on the canvas
                 rp.Canvas.DrawPath(path, paint);
-            }
                 Drawing.DrawLine(rp.Canvas, paint, pixelEdge);
-            }*/
+            }
 
             // Draw vertices after edges (as in your original code)
             // Draw vertices and their labels

@@ -56,6 +56,22 @@ namespace GraphTheoristSketchpad.Logic
             this.AddEdge(start, end, 1d);
         }
 
+        public void RemoveEdge(Vertex start, Vertex end)
+        {
+            int startIndex = vertices.IndexOf(start);
+            int endIndex = vertices.IndexOf(end);
+            Vector<double> startRow = this.matrix.Row(startIndex);
+            Vector<double> endRow = this.matrix.Row(endIndex);
+            for (int i = 0; i<startRow.Count; i++)
+            {
+                if (startRow[i] > 0 && endRow[i] > 0)
+                {
+                    this.matrix = this.matrix.RemoveColumn(i);
+                    break;
+                }
+            }
+        }
+
         public CoordinateLine[] getEdges()
         {
             CoordinateLine[] edges = new CoordinateLine[this.matrix.ColumnCount];

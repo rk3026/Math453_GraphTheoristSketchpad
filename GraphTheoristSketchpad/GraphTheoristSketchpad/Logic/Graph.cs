@@ -1,12 +1,12 @@
 ﻿using ScottPlot;
 using System.Collections;
+using System.Windows.Input;
 
 namespace GraphTheoristSketchpad.Logic
 {
     public class Graph
     {
         public ISet<Vertex> Vertices { get; } = new HashSet<Vertex>();
-        public ISet<Edge> Edges { get; } = new HashSet<Edge>();
 
 
         public int Count => throw new NotImplementedException();
@@ -20,16 +20,22 @@ namespace GraphTheoristSketchpad.Logic
             matrix = new IncidenceMatrix();
         }
 
+        public bool RemoveVertex(Vertex v)
+        {
+            this.Vertices.Remove(v);
+            return true;
+        }
+
         public Vertex? getNearestVertex(Coordinates location, double maxDistance = 15)
         {
             double closestCoordinates = double.MaxValue;
             Vertex closestVertex = null;
             foreach (Vertex v in Vertices)
             {
-                double currentDistance = new CoordinateLine(v.Location, location).Length;
-                if (currentDistance < closestCoordinates)
+                double currentVertexDistance = new CoordinateLine(v.Location, location).Length;
+                if (currentVertexDistance < closestCoordinates)
                 {
-                    closestCoordinates = currentDistance;
+                    closestCoordinates = currentVertexDistance;
                     closestVertex = v;
                 }
             }
@@ -42,6 +48,57 @@ namespace GraphTheoristSketchpad.Logic
                 return closestVertex;
             }
         }
+
+        public CoordinateLine? getNearestEdge(Coordinates location, double maxDistance = 15)
+        {
+            CoordinateLine? closestEdge = null;
+            CoordinateLine[] edges = getEdges();
+            double closestDistance = double.MaxValue;
+
+            // Iterate over all edges
+            foreach (CoordinateLine e in edges)
+            {
+                // Calculate the perpendicular distance from location to the edge
+                double distance = GetDistancePointToLineSegment(e.Start, e.End, location);
+
+                // If the edge is within maxDistance and is the closest so far, update closestEdge
+                if (distance < closestDistance && distance <= maxDistance)
+                {
+                    closestDistance = distance;
+                    closestEdge = e;
+                }
+            }
+
+            // Return the closest edge (or null if none is within maxDistance)
+            return closestEdge;
+        }
+
+        private double GetDistancePointToLineSegment(Coordinates lineStart, Coordinates lineEnd, Coordinates point)
+        {
+            double dx = lineEnd.X - lineStart.X;
+            double dy = lineEnd.Y - lineStart.Y;
+
+            if (dx == 0 && dy == 0)
+            {
+                // The line segment is a point, return the distance to that point
+                return Math.Sqrt(Math.Pow(point.X - lineStart.X, 2) + Math.Pow(point.Y - lineStart.Y, 2));
+            }
+
+            // Calculate t (parameter that gives the projection of the point on the line)
+            double t = ((point.X - lineStart.X) * dx + (point.Y - lineStart.Y) * dy) / (dx * dx + dy * dy);
+
+            // Clamp t to the range [0, 1] to ensure it falls within the segment
+            t = Math.Max(0, Math.Min(1, t));
+
+            // Find the closest point on the segment
+            double closestX = lineStart.X + t * dx;
+            double closestY = lineStart.Y + t * dy;
+
+            // Return the Euclidean distance from the point to the closest point on the segment
+            return Math.Sqrt(Math.Pow(point.X - closestX, 2) + Math.Pow(point.Y - closestY, 2));
+        }
+
+
 
         public CoordinateLine[] getEdges()
         {
@@ -57,6 +114,19 @@ namespace GraphTheoristSketchpad.Logic
         public bool AddEdge(Vertex start, Vertex end)
         {
             this.matrix.AddEdge(start, end);
+            return true;
+        }
+
+        public bool RemoveEdge(CoordinateLine edge)
+        {
+            Vertex? start = getNearestVertex(edge.Start, 1);
+            Vertex? end = getNearestVertex(edge.End, 1);
+            if (start == null || end == null)
+            {
+                return false;
+            }
+
+            this.matrix.RemoveEdge(start, end);
             return true;
         }
 

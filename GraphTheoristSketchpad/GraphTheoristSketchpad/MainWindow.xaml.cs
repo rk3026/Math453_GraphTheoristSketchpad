@@ -157,6 +157,9 @@ namespace GraphTheoristSketchpad
 
         private void btnErase_Click(object sender, RoutedEventArgs e)
         {
+            // Load the custom cursor from the Resources folder
+            var cursorStream = Application.GetResourceStream(new Uri("pack://application:,,,/Resources/67732.cur")).Stream;
+            GraphView.Cursor = new Cursor(cursorStream);
             currentMode = ToolMode.Erase;
             SetButtonSelected(btnErase);
         }
@@ -200,6 +203,8 @@ namespace GraphTheoristSketchpad
                     }
                     break;
                 case ToolMode.Erase:
+                    Console.WriteLine("Deleting items at: " + mouseLocation.X + ", " + mouseLocation.Y);
+                    DeleteVertexOrEdge(mouseLocation.X, mouseLocation.Y);
                     break;
                 case ToolMode.View:
                     break;
@@ -208,6 +213,23 @@ namespace GraphTheoristSketchpad
 
             }
             GraphView.Interaction.Disable();
+        }
+
+        private void DeleteVertexOrEdge(double x, double y)
+        {
+            Coordinates location = new Coordinates(x, y);
+            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(location, 1);
+            if (nearestVertex != null)
+            {
+                graphRendererPlot.graph.RemoveVertex(nearestVertex);
+            }
+
+            CoordinateLine? nearestEdge = graphRendererPlot.graph.getNearestEdge(location,1);
+            if (nearestEdge != null)
+            {
+                graphRendererPlot.graph.RemoveEdge((CoordinateLine)nearestEdge);
+            }
+            GraphView.Refresh();
         }
 
         private void FormsPlot1_MouseLeftButtonUp(object? sender, MouseEventArgs e)
@@ -255,7 +277,10 @@ namespace GraphTheoristSketchpad
             Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
             Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
 
-            GraphView.Cursor = nearestVertex != null ? Cursors.Hand : Cursors.Arrow;
+            if (currentMode != ToolMode.Erase)
+            {
+                GraphView.Cursor = nearestVertex != null ? Cursors.Hand : Cursors.Arrow;
+            }
 
             if (CurrentlyLeftClickedVertex != null && currentMode == ToolMode.Edit)
             {
