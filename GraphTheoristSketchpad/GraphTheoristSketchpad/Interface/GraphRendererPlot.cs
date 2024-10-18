@@ -56,7 +56,6 @@ namespace GraphTheoristSketchpad.Interface
                 for(int i = 1; i <= sameEdges[edge]; ++i)
                 {
                     PixelLine pixelEdge = Axes.GetPixelLine(edge);
-                PixelLine pixelEdge = Axes.GetPixelLine(edges[i]);
 
                     // Calculate the middle point between the two vertices
                     Pixel start = pixelEdge.Pixel1;
@@ -79,7 +78,7 @@ namespace GraphTheoristSketchpad.Interface
                     rp.Canvas.DrawPath(path, paint);
                 }
             }
-            }*/
+            
 
             // Draw vertices after edges (as in your original code)
             // Draw vertices and their labels
