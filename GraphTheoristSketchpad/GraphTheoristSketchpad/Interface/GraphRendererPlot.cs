@@ -49,36 +49,47 @@ namespace GraphTheoristSketchpad.Interface
             }
 
             // edge style
-            paint.StrokeWidth = 5;
-            paint.Style = SKPaintStyle.Stroke;
             paint.Color = SKColors.Red;
+            paint.IsAntialias = true;
+            paint.StrokeWidth = 2;
+            paint.Style = SKPaintStyle.Stroke;
 
             // draw edges
             foreach (CoordinateLine edge in sameEdges.Keys)
             {
-                for(int i = 1; i <= sameEdges[edge]; ++i)
+                PixelLine pixelEdge = Axes.GetPixelLine(edge);
+
+                // edge is loop
+                if (edge.Start.Equals(edge.End))
                 {
-                    PixelLine pixelEdge = Axes.GetPixelLine(edge);
+                    for (int i = 1; i <= sameEdges[edge]; ++i)
+                    {
+                        int radius = i * 10 + 10;
+                        rp.Canvas.DrawCircle((float)pixelEdge.X1+radius, (float)pixelEdge.Y1, radius, paint);
+                    }
+                }
+                // edge is not loop
+                else
+                {
+                    for (int i = 1; i <= sameEdges[edge]; ++i)
+                    {
+                        // Calculate the middle point between the two vertices
+                        Pixel start = pixelEdge.Pixel1;
+                        Pixel end = pixelEdge.Pixel2;
 
-                    // Calculate the middle point between the two vertices
-                    Pixel start = pixelEdge.Pixel1;
-                    Pixel end = pixelEdge.Pixel2;
+                        // Calculate control point for the quadratic Bezier curve
+                        // Offset for each parallel edge to spread the arcs apart
+                        float offset = (i + ((sameEdges[edge] + 1) % 2)) / 2 * (-2 * (i % 2) + 1) * 40; // Adjust offset size for parallel edges
+                        Pixel controlPoint = GetControlPointForArc(start, end, offset);
 
-                    // Calculate control point for the quadratic Bezier curve
-                    // Offset for each parallel edge to spread the arcs apart
-                    float offset = (i+((sameEdges[edge]+1)%2))/2*(-2*(i%2)+1) * 40; // Adjust offset size for parallel edges
-                    Pixel controlPoint = GetControlPointForArc(start, end, offset);
+                        // Draw quadratic Bézier curve as an arc
+                        SKPath path = new SKPath();
+                        path.MoveTo(start.X, start.Y);
+                        path.QuadTo(controlPoint.X, controlPoint.Y, end.X, end.Y);
 
-                    // Draw quadratic Bézier curve as an arc
-                    SKPath path = new SKPath();
-                    path.MoveTo(start.X, start.Y);
-                    path.QuadTo(controlPoint.X, controlPoint.Y, end.X, end.Y);
-
-                    paint.IsAntialias = true;
-                    paint.StrokeWidth = 2;
-                    paint.Style = SKPaintStyle.Stroke;
-                    // Draw the arc on the canvas
-                    rp.Canvas.DrawPath(path, paint);
+                        // Draw the arc on the canvas
+                        rp.Canvas.DrawPath(path, paint);
+                    }
                 }
             }
             

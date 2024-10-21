@@ -108,7 +108,6 @@ namespace GraphTheoristSketchpad.Logic
             }
 
             // Remove the edges from the matrix (start from last to avoid shifting)
-            edgesToRemove.Sort();
             edgesToRemove.Reverse();
             foreach (int col in edgesToRemove)
             {
