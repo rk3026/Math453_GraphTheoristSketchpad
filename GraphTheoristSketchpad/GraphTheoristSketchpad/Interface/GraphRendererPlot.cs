@@ -22,6 +22,8 @@ namespace GraphTheoristSketchpad.Interface
 
         public SKPaint textPaint;
 
+        public SKPaint edgePaint;
+
         public GraphRendererPlot()
         {
             textPaint = new SKPaint
@@ -32,6 +34,14 @@ namespace GraphTheoristSketchpad.Interface
                 Typeface = SKTypeface.FromFamilyName("Arial"),
                 BlendMode = SKBlendMode.Multiply
             };
+
+            edgePaint = new SKPaint
+            {
+                Color = SKColors.Red.WithAlpha(130),
+                IsAntialias = true,
+                StrokeWidth = 2,
+                Style = SKPaintStyle.Stroke,
+        };
         }
 
         public void Render(RenderPack rp)
@@ -58,12 +68,6 @@ namespace GraphTheoristSketchpad.Interface
                 }
             }
 
-            // edge style
-            paint.Color = SKColors.Red;
-            paint.IsAntialias = true;
-            paint.StrokeWidth = 2;
-            paint.Style = SKPaintStyle.Stroke;
-
             // draw edges
             foreach (CoordinateLine edge in sameEdges.Keys)
             {
@@ -75,7 +79,7 @@ namespace GraphTheoristSketchpad.Interface
                     for (int i = 1; i <= sameEdges[edge]; ++i)
                     {
                         int radius = i * 10 + 10;
-                        rp.Canvas.DrawCircle((float)pixelEdge.X1+radius, (float)pixelEdge.Y1, radius, paint);
+                        rp.Canvas.DrawCircle((float)pixelEdge.X1+radius, (float)pixelEdge.Y1, radius, edgePaint);
                     }
                 }
                 // edge is not loop
@@ -98,7 +102,7 @@ namespace GraphTheoristSketchpad.Interface
                         path.QuadTo(controlPoint.X, controlPoint.Y, end.X, end.Y);
 
                         // Draw the arc on the canvas
-                        rp.Canvas.DrawPath(path, paint);
+                        rp.Canvas.DrawPath(path, edgePaint);
                     }
                 }
             }
@@ -128,7 +132,7 @@ namespace GraphTheoristSketchpad.Interface
                 // Calculate the middle point between the two vertices
                 Pixel start = pixelEdge.Pixel1;
                 Pixel end = pixelEdge.Pixel2;
-                rp.Canvas.DrawLine(start.X, start.Y, end.X, end.Y, paint);
+                rp.Canvas.DrawLine(start.X, start.Y, end.X, end.Y, edgePaint);
             }
         }
 
