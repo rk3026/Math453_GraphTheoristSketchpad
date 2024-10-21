@@ -7,6 +7,7 @@ using System.Collections;
 using SkiaSharp;
 using MathNet.Numerics.LinearAlgebra;
 using ScottPlot;
+using System.Windows.Controls;
 
 namespace GraphTheoristSketchpad.Logic
 {
@@ -22,6 +23,21 @@ namespace GraphTheoristSketchpad.Logic
         {
             vertices = new List<Vertex>();
             matrix = CreateMatrix.Sparse<double>(0,0);
+        }
+
+        public string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < this.matrix.RowCount; ++i)
+            {
+                Vector<double> row = this.matrix.Row(i);
+                for (int j = 0; j < row.Count; j++)
+                {
+                    sb.Append(row[j] + " ");
+                }
+                sb.Append('\n');
+            }
+            return sb.ToString();
         }
 
         // Adds a column to the matrix for this new edge.
@@ -71,6 +87,41 @@ namespace GraphTheoristSketchpad.Logic
                 }
             }
         }
+
+        public void RemoveVertex(Vertex vertex)
+        {
+            int vertexIndex = vertices.IndexOf(vertex);
+
+            if (vertexIndex == -1)
+                return;
+
+            // Find all edges incident to this vertex and remove them
+            List<int> edgesToRemove = new List<int>();
+
+            // Iterate through the columns (edges) and mark the ones connected to this vertex
+            for (int col = 0; col < matrix.ColumnCount; col++)
+            {
+                if (matrix[vertexIndex, col] > 0)
+                {
+                    edgesToRemove.Add(col);
+                }
+            }
+
+            // Remove the edges from the matrix (start from last to avoid shifting)
+            edgesToRemove.Sort();
+            edgesToRemove.Reverse();
+            foreach (int col in edgesToRemove)
+            {
+                matrix = matrix.RemoveColumn(col);
+            }
+
+            // Remove the vertex from the vertex list
+            vertices.RemoveAt(vertexIndex);
+
+            // Remove the vertex row from the matrix
+            matrix = matrix.RemoveRow(vertexIndex);
+        }
+
 
         public CoordinateLine[] getEdges()
         {

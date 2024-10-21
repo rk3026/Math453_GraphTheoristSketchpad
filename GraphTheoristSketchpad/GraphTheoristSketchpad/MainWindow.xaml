@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:GraphTheoristSketchpad"
         xmlns:ScottPlot="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
-        
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
 
@@ -30,11 +29,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <!-- Menu bar will size automatically -->
             <RowDefinition Height="Auto"/>
-            <!-- Toolbar will size automatically -->
             <RowDefinition Height="*"/>
-            <!-- Graph will take the remaining space -->
         </Grid.RowDefinitions>
 
         <!-- Menu Bar -->
@@ -50,8 +46,8 @@
             </MenuItem>
         </Menu>
 
+        <!-- Toolbar -->
         <ToolBarTray Grid.Row="1">
-            <!-- Place Toolbar in the second row -->
             <ToolBar>
                 <Button Name="btnAddVertex" Content="Add Vertex" Click="btnAddVertex_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnAddEdge" Content="Add Edge" Click="btnAddEdge_Click" Style="{StaticResource ToolButtonStyle}" />
@@ -61,9 +57,25 @@
             </ToolBar>
         </ToolBarTray>
 
-        <ScottPlot:WpfPlot x:Name="GraphView" Margin="0" Grid.Row="2"/>
-        
-        
-        <!-- Graph in the third row -->
+        <!-- Main Graph Area -->
+        <Grid Grid.Row="2">
+            <ScottPlot:WpfPlot x:Name="GraphView" Margin="0"/>
+
+            <!-- StackPanel for ToggleButton and TextBox -->
+            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Width="250" Margin="10">
+                <!-- ToggleButton to Show/Hide the TextBox -->
+                <ToggleButton x:Name="IncidenceMatrixToggleButton" Content="Show Incidence Matrix" Click="ToggleButton_Click"/>
+
+                <!-- Collapsible TextBox -->
+                <TextBox x:Name="IncidenceMatrixTextBox" Margin="0,5,0,0"
+                         Visibility="Collapsed"
+                         Height="100"
+                         TextWrapping="Wrap"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         Background="LightGray"
+                         Foreground="Black"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

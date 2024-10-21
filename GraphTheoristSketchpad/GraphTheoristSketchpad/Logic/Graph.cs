@@ -6,12 +6,10 @@ namespace GraphTheoristSketchpad.Logic
 {
     public class Graph
     {
+        // Event that is triggered when the graph changes
+        public event EventHandler? GraphChanged;
+
         public ISet<Vertex> Vertices { get; } = new HashSet<Vertex>();
-
-
-        public int Count => throw new NotImplementedException();
-
-        public bool IsReadOnly => throw new NotImplementedException();
 
         private IncidenceMatrix matrix;
 
@@ -20,10 +18,28 @@ namespace GraphTheoristSketchpad.Logic
             matrix = new IncidenceMatrix();
         }
 
+        // Method to raise the GraphChanged event
+        protected virtual void OnGraphChanged()
+        {
+            GraphChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         public bool RemoveVertex(Vertex v)
         {
-            this.Vertices.Remove(v);
+            if (!Vertices.Remove(v))
+                return false;
+
+            matrix.RemoveVertex(v);
+
+            // Trigger the event when a vertex is removed
+            OnGraphChanged();
+
             return true;
+        }
+
+        public string GetIncidenceMatrix()
+        {
+            return matrix.ToString();
         }
 
         public Vertex? getNearestVertex(Coordinates location, double maxDistance = 15)
@@ -55,13 +71,10 @@ namespace GraphTheoristSketchpad.Logic
             CoordinateLine[] edges = getEdges();
             double closestDistance = double.MaxValue;
 
-            // Iterate over all edges
             foreach (CoordinateLine e in edges)
             {
-                // Calculate the perpendicular distance from location to the edge
                 double distance = GetDistancePointToLineSegment(e.Start, e.End, location);
 
-                // If the edge is within maxDistance and is the closest so far, update closestEdge
                 if (distance < closestDistance && distance <= maxDistance)
                 {
                     closestDistance = distance;
@@ -69,7 +82,6 @@ namespace GraphTheoristSketchpad.Logic
                 }
             }
 
-            // Return the closest edge (or null if none is within maxDistance)
             return closestEdge;
         }
 
@@ -80,25 +92,17 @@ namespace GraphTheoristSketchpad.Logic
 
             if (dx == 0 && dy == 0)
             {
-                // The line segment is a point, return the distance to that point
                 return Math.Sqrt(Math.Pow(point.X - lineStart.X, 2) + Math.Pow(point.Y - lineStart.Y, 2));
             }
 
-            // Calculate t (parameter that gives the projection of the point on the line)
             double t = ((point.X - lineStart.X) * dx + (point.Y - lineStart.Y) * dy) / (dx * dx + dy * dy);
-
-            // Clamp t to the range [0, 1] to ensure it falls within the segment
             t = Math.Max(0, Math.Min(1, t));
 
-            // Find the closest point on the segment
             double closestX = lineStart.X + t * dx;
             double closestY = lineStart.Y + t * dy;
 
-            // Return the Euclidean distance from the point to the closest point on the segment
             return Math.Sqrt(Math.Pow(point.X - closestX, 2) + Math.Pow(point.Y - closestY, 2));
         }
-
-
 
         public CoordinateLine[] getEdges()
         {
@@ -108,12 +112,20 @@ namespace GraphTheoristSketchpad.Logic
         public bool Add(Vertex item)
         {
             Vertices.Add(item);
+
+            // Trigger the event when a vertex is added
+            OnGraphChanged();
+
             return true;
         }
 
         public bool AddEdge(Vertex start, Vertex end)
         {
-            this.matrix.AddEdge(start, end);
+            matrix.AddEdge(start, end);
+
+            // Trigger the event when an edge is added
+            OnGraphChanged();
+
             return true;
         }
 
@@ -126,7 +138,11 @@ namespace GraphTheoristSketchpad.Logic
                 return false;
             }
 
-            this.matrix.RemoveEdge(start, end);
+            matrix.RemoveEdge(start, end);
+
+            // Trigger the event when an edge is removed
+            OnGraphChanged();
+
             return true;
         }
 

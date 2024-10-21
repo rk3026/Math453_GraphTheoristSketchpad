@@ -1,4 +1,5 @@
 ﻿using GraphTheoristSketchpad.Logic;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 using ScottPlot;
 using ScottPlot.Plottables;
 using SkiaSharp;
@@ -6,10 +7,12 @@ using System.Windows.Input;
 
 namespace GraphTheoristSketchpad.Interface
 {
-    // This class can be assigned to a wpf plot, which allows for creation of graphs.
+    // This class can be assigned to a scottplot plot, which allows for creation of graphs.
     public class GraphRendererPlot : IPlottable
     {
         public Graph graph = new Graph();
+        public CoordinateLine? temporaryLine = null;
+        
         IColormap Colormap { get; set; } = new ScottPlot.Colormaps.Turbo();
         // items required by IPlottable
         public bool IsVisible { get; set; } = true;
@@ -80,7 +83,6 @@ namespace GraphTheoristSketchpad.Interface
             }
             
 
-            // Draw vertices after edges (as in your original code)
             // Draw vertices and their labels
             foreach (Vertex v in graph.Vertices)
             {
@@ -104,6 +106,16 @@ namespace GraphTheoristSketchpad.Interface
                     rp.Canvas.DrawText(vertexLabel, centerPixel.X + textOffsetX, centerPixel.Y + textOffsetY, textPaint);
                 }
             }
+
+            // Draw temporary line (from selected vertex to current mouse position)
+            if (temporaryLine != null)
+            {
+                PixelLine pixelEdge = Axes.GetPixelLine((CoordinateLine)temporaryLine);
+                // Calculate the middle point between the two vertices
+                Pixel start = pixelEdge.Pixel1;
+                Pixel end = pixelEdge.Pixel2;
+                rp.Canvas.DrawLine(start.X, start.Y, end.X, end.Y, paint);
+            }
         }
 
         // Function to calculate the control point for the arc
@@ -125,6 +137,5 @@ namespace GraphTheoristSketchpad.Interface
             // Create the control point at the offset
             return new Pixel(midX + offsetX, midY + offsetY);
         }
-
     }
 }

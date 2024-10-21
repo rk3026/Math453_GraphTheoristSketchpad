@@ -7,6 +7,8 @@ using System.Collections;
 using GraphTheoristSketchpad.Interface;
 using System.Windows.Controls;
 using GraphTheoristSketchpad.Logic;
+using SkiaSharp;
+using System.Windows.Shapes;
 
 namespace GraphTheoristSketchpad
 {
@@ -17,9 +19,9 @@ namespace GraphTheoristSketchpad
         }
         ToolMode currentMode = ToolMode.View;
         private List<Button> toolbarButtons;
-        public GraphRendererPlot graphRendererPlot = new GraphRendererPlot();
-        Vertex CurrentlyLeftClickedVertex = null;
-        Vertex CurrentlyRightClickedVertex = null;
+        private GraphRendererPlot graphRendererPlot = new GraphRendererPlot();
+        private Vertex CurrentlyLeftClickedVertex = null;
+        private Vertex CurrentlyRightClickedVertex = null;
 
         public MainWindow()
         {
@@ -31,7 +33,6 @@ namespace GraphTheoristSketchpad
                 btnErase,
                 btnView,
                 btnEdit
-                // Include any other buttons you want to manage
             };
             SetButtonSelected(btnView); // Select the view button
 
@@ -49,6 +50,12 @@ namespace GraphTheoristSketchpad
             GraphView.MouseLeftButtonDown += FormsPlot1_MouseLeftButtonDown;
             GraphView.MouseLeftButtonUp += FormsPlot1_MouseLeftButtonUp;
             GraphView.MouseRightButtonDown += FormsPlot1_MouseRightButtonDown;
+            graphRendererPlot.graph.GraphChanged += UpdateIncidenceMatrixText;
+        }
+
+        private void UpdateIncidenceMatrixText(object? sender, EventArgs e)
+        {
+            IncidenceMatrixTextBox.Text = this.graphRendererPlot.graph.GetIncidenceMatrix();
         }
 
         private void FormsPlot1_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -107,29 +114,6 @@ namespace GraphTheoristSketchpad
             }
             GraphView.Refresh();
         }
-        /*
-        private void renameVertex(object sender, KeyEventArgs e)
-        {
-            int keyValue = (int)e.Key;
-            // Check if the backspace key was pressed
-            if (e.Key == Key.Back && CurrentlyRightClickedVertex.Label.Length > 0)
-            {
-                // Remove the last character from the label
-                CurrentlyRightClickedVertex.Label = CurrentlyRightClickedVertex.Label.Substring(0, CurrentlyRightClickedVertex.Label.Length - 1);
-                e.Handled = true;
-            }
-            // Check if the enter key was pressed
-            else if (e.Key == Key.Enter)
-            {
-                // Stop renaming by detaching the event handler
-                GraphView.KeyDown -= renameVertex;
-                GraphView.TextInput -= renameVertex;
-                e.Handled = true;
-            }
-            GraphView.Refresh();
-        }
-        */
-
 
         private void SetButtonSelected(Button selectedButton)
         {
@@ -174,6 +158,19 @@ namespace GraphTheoristSketchpad
         {
             currentMode = ToolMode.Edit;
             SetButtonSelected(btnEdit);
+        }
+
+        private void ToggleButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Toggle the visibility of the IncidenceMatrixTextBox
+            if (IncidenceMatrixToggleButton.IsChecked == true)
+            {
+                IncidenceMatrixTextBox.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                IncidenceMatrixTextBox.Visibility = Visibility.Collapsed;
+            }
         }
 
         private void FormsPlot1_MouseLeftButtonDown(object? sender, MouseEventArgs e)
@@ -234,6 +231,8 @@ namespace GraphTheoristSketchpad
 
         private void FormsPlot1_MouseLeftButtonUp(object? sender, MouseEventArgs e)
         {
+            graphRendererPlot.temporaryLine = null;
+
             // Dragging Vertices:
             double dpiScale = GetDpiScale();
             Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
@@ -277,19 +276,34 @@ namespace GraphTheoristSketchpad
             Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
             Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
 
+            // Change cursor based on mode and nearest vertex
             if (currentMode != ToolMode.Erase)
             {
                 GraphView.Cursor = nearestVertex != null ? Cursors.Hand : Cursors.Arrow;
             }
 
+            // If in Erase mode and the left mouse button is pressed, erase items
+            if (currentMode == ToolMode.Erase && e.LeftButton == MouseButtonState.Pressed)
+            {
+                DeleteVertexOrEdge(mouseLocation.X, mouseLocation.Y);
+            }
+
+            // If in Edit mode and a vertex is being dragged, update its position
             if (CurrentlyLeftClickedVertex != null && currentMode == ToolMode.Edit)
             {
-                // Update the position of the vertex
                 CurrentlyLeftClickedVertex.Location = mouseLocation;
+                GraphView.Refresh();
+            }
 
+            if (CurrentlyLeftClickedVertex != null && currentMode == ToolMode.AddEdge)
+            {
+                Coordinates mouseCoords = new Coordinates(mouseLocation.X, mouseLocation.Y);
+                CoordinateLine line = new CoordinateLine(CurrentlyLeftClickedVertex.Location, mouseCoords);
+                graphRendererPlot.temporaryLine = line;
                 GraphView.Refresh();
             }
         }
+
 
 
         private void AddVertex(double x, double y)
