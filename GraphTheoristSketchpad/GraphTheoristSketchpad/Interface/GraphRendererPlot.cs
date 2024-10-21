@@ -20,8 +20,18 @@ namespace GraphTheoristSketchpad.Interface
         public IEnumerable<LegendItem> LegendItems => LegendItem.None;
         public AxisLimits GetAxisLimits() => AxisLimits.Default;
 
+        public SKPaint textPaint;
+
         public GraphRendererPlot()
         {
+            textPaint = new SKPaint
+            {
+                Color = SKColors.Black,
+                TextSize = 20,
+                IsAntialias = true,
+                Typeface = SKTypeface.FromFamilyName("Arial"),
+                BlendMode = SKBlendMode.Multiply
+            };
         }
 
         public void Render(RenderPack rp)
@@ -79,7 +89,7 @@ namespace GraphTheoristSketchpad.Interface
 
                         // Calculate control point for the quadratic Bezier curve
                         // Offset for each parallel edge to spread the arcs apart
-                        float offset = (i + ((sameEdges[edge] + 1) % 2)) / 2 * (-2 * (i % 2) + 1) * 40; // Adjust offset size for parallel edges
+                        float offset = (i + ((sameEdges[edge] + 1) % 2)) / 2 * (-2 * (i % 2) + 1) * 40 - 20* (-2 * (i % 2) + 1)*((sameEdges[edge] + 1) % 2); // Adjust offset size for parallel edges
                         Pixel controlPoint = GetControlPointForArc(start, end, offset);
 
                         // Draw quadratic Bézier curve as an arc
@@ -101,19 +111,12 @@ namespace GraphTheoristSketchpad.Interface
                 Pixel centerPixel = Axes.GetPixel(centerCoordinates);
                 Drawing.DrawMarker(rp.Canvas, paint, centerPixel, v.Style);
 
-                using SKPaint textPaint = new SKPaint
-                {
-                    Color = SKColors.Black,
-                    TextSize = 20,
-                    IsAntialias = true,
-                    Typeface = SKTypeface.FromFamilyName("Arial"),
-                };
-
                 string vertexLabel = v.Label;
                 if (!string.IsNullOrEmpty(vertexLabel))
                 {
                     float textOffsetX = 10;
                     float textOffsetY = -10;
+                    
                     rp.Canvas.DrawText(vertexLabel, centerPixel.X + textOffsetX, centerPixel.Y + textOffsetY, textPaint);
                 }
             }
