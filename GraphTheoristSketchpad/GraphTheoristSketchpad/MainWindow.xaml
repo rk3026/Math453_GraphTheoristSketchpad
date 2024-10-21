@@ -1,4 +1,5 @@
 ﻿<Window x:Class="GraphTheoristSketchpad.MainWindow"
+        xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -60,8 +61,12 @@
         <!-- Main Graph Area -->
         <Grid Grid.Row="2">
             <ScottPlot:WpfPlot x:Name="GraphView" Margin="0"/>
+            <!-- Popup for ColorPicker -->
+            <Popup x:Name="ColorPickerPopup" Placement="Mouse" StaysOpen="False">
+                <xctk:ColorPicker x:Name="VertexColorPicker" Width="200" Height="30" />
+            </Popup>
 
-            <!-- StackPanel for ToggleButton and TextBox -->
+            <!-- StackPanel for ToggleButton, TextBox, and ColorPicker -->
             <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Width="250" Margin="10">
                 <!-- ToggleButton to Show/Hide the TextBox -->
                 <ToggleButton x:Name="IncidenceMatrixToggleButton" Content="Show Incidence Matrix" Click="ToggleButton_Click"/>

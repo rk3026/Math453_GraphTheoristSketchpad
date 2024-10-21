@@ -9,13 +9,14 @@ using System.Windows.Controls;
 using GraphTheoristSketchpad.Logic;
 using SkiaSharp;
 using System.Windows.Shapes;
+using Xceed.Wpf.Toolkit;
 
 namespace GraphTheoristSketchpad
 {
     public partial class MainWindow : Window
     {
-        enum ToolMode { None, AddVertex, AddEdge, Erase, View,
-            Edit
+        enum ToolMode { 
+            None, AddVertex, AddEdge, Erase, View, Edit
         }
         ToolMode currentMode = ToolMode.View;
         private List<Button> toolbarButtons;
@@ -83,7 +84,28 @@ namespace GraphTheoristSketchpad
 
                 GraphView.Menu?.Add("Change Color", (graphView) =>
                 {
-                    graphView.Refresh();
+                    var vertexPosition = CurrentlyRightClickedVertex.Location;
+                    ColorPickerPopup.IsOpen = true;
+                    ScottPlot.Color c = CurrentlyRightClickedVertex.Style.FillColor;
+                    System.Windows.Media.Color color = new System.Windows.Media.Color();
+                    color.R = c.R;
+                    color.G = c.G;
+                    color.B = c.B;
+                    color.A = c.A;
+                    VertexColorPicker.SelectedColor = color;
+                    // Handle the color selection event
+                    VertexColorPicker.SelectedColorChanged += (sender, args) =>
+                    {
+                        // Get the selected color
+                        var selectedColor = VertexColorPicker.SelectedColor;
+
+                        // Apply the selected color to the vertex
+                        if (selectedColor.HasValue)
+                        {
+                            changeVertexColor(selectedColor.Value, CurrentlyRightClickedVertex);
+                        }
+                        graphView.Refresh();
+                    };
                 });
                 GraphView.Refresh();
             }
@@ -92,6 +114,12 @@ namespace GraphTheoristSketchpad
                 // Set it back to normal right-click menu options:
                 GraphView.Menu?.Reset();
             }
+        }
+
+        private void changeVertexColor(System.Windows.Media.Color c, Vertex v)
+        {
+            ScottPlot.Color newC = new ScottPlot.Color(c.R, c.G, c.B, c.A);
+            v.Style.FillColor = newC;
         }
 
         private void renameVertex(object sender, TextCompositionEventArgs e)
@@ -346,7 +374,7 @@ namespace GraphTheoristSketchpad
 
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("About this application...", "About", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show("About this application...", "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         ////////////////////////// END OF TOOLBAR STUFF ///////////////////////////////////////////////////
