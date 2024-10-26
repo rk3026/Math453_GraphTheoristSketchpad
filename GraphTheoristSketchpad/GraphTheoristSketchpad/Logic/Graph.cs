@@ -109,6 +109,11 @@ namespace GraphTheoristSketchpad.Logic
             return matrix.getEdges();
         }
 
+        public CoordinateLine[] getEdgesOn(Vertex v)
+        {
+            return matrix.getEdgesOn(v);
+        }
+
         public bool Add(Vertex item)
         {
             Vertices.Add(item);

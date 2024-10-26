@@ -46,6 +46,7 @@ namespace GraphTheoristSketchpad
             axis.Top.IsVisible = false;
 
             GraphView.Plot.Add.Plottable(graphRendererPlot);
+            GraphView.Plot.Axes.SquareUnits();
 
             GraphView.MouseMove += FormsPlot1_MouseMove; // Separate so each mode has its own function.
             GraphView.MouseLeftButtonDown += FormsPlot1_MouseLeftButtonDown;

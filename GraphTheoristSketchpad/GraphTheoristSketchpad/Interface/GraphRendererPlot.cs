@@ -3,6 +3,8 @@ using MathNet.Numerics.LinearAlgebra.Factorization;
 using ScottPlot;
 using ScottPlot.Plottables;
 using SkiaSharp;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows.Input;
 
 namespace GraphTheoristSketchpad.Interface
@@ -41,7 +43,7 @@ namespace GraphTheoristSketchpad.Interface
                 IsAntialias = true,
                 StrokeWidth = 2,
                 Style = SKPaintStyle.Stroke,
-        };
+            };
         }
 
         public void Render(RenderPack rp)
@@ -76,10 +78,60 @@ namespace GraphTheoristSketchpad.Interface
                 // edge is loop
                 if (edge.Start.Equals(edge.End))
                 {
+                    CoordinateLine[] incidentEdges =
+                        graph.getEdgesOn(graph.getNearestVertex(edge.Start)!);
+
+                    // get counter clockwise angle for each edge
+                    List<KeyValuePair<CoordinateLine, double>> edgeAngles =
+                        new List<KeyValuePair<CoordinateLine, double>>();
+                    foreach (CoordinateLine incidentEdge in incidentEdges)
+                    {
+                        // add if not loop
+                        if (!incidentEdge.Equals(edge))
+                        {
+                            double deltaY = incidentEdge.End.Y - incidentEdge.Start.Y;
+                            double deltaX = incidentEdge.End.X - incidentEdge.Start.X;
+                            double edgeAngle = Math.Atan2(deltaY, deltaX);
+                            edgeAngles.Add(new KeyValuePair<CoordinateLine, double>(incidentEdge, edgeAngle));
+                        }
+                    }
+
+                    Debug.Assert(edgeAngles.Count != 0);
+
+                    // sort by angle
+                    edgeAngles.Sort((KeyValuePair<CoordinateLine, double> x, KeyValuePair<CoordinateLine, double> y) => { return x.Value < y.Value ? -1 : 1; });
+
+                    // counter clockwise angle of edge with largest angle
+                    double largestEdgeAngle = edgeAngles.First().Value;
+
+                    // largest counter clockwise angle angle between two edges
+                    double largestAngle = 0;
+                    double lastAngle = edgeAngles.Last().Value - 2*Math.PI;
+
+                    // find largest counter clockwise angle
+                    foreach(KeyValuePair<CoordinateLine, double> edgeAngle in edgeAngles)
+                    {
+                        double angle = edgeAngle.Value - lastAngle;
+
+                        if(angle > largestAngle)
+                        {
+                            largestEdgeAngle = edgeAngle.Value;
+                            largestAngle = angle;
+                        }
+
+                        lastAngle = edgeAngle.Value;
+                    }
+
+                    double directionAngle = largestEdgeAngle - largestAngle/2;
+
+                    // unit vector pointing to middle of largest angle
+                    Pixel direction = new Pixel(Math.Cos(directionAngle), -Math.Sin(directionAngle));
+
+                    // draw loops
                     for (int i = 1; i <= sameEdges[edge]; ++i)
                     {
                         int radius = i * 10 + 10;
-                        rp.Canvas.DrawCircle((float)pixelEdge.X1+radius, (float)pixelEdge.Y1, radius, edgePaint);
+                        rp.Canvas.DrawCircle(pixelEdge.X1 + direction.X * radius, pixelEdge.Y1 + direction.Y * radius, radius, edgePaint);
                     }
                 }
                 // edge is not loop
@@ -106,7 +158,6 @@ namespace GraphTheoristSketchpad.Interface
                     }
                 }
             }
-            
 
             // Draw vertices and their labels
             foreach (Vertex v in graph.Vertices)

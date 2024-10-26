@@ -25,7 +25,7 @@ namespace GraphTheoristSketchpad.Logic
             matrix = CreateMatrix.Sparse<double>(0,0);
         }
 
-        public string ToString()
+        public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < this.matrix.RowCount; ++i)
@@ -121,6 +121,45 @@ namespace GraphTheoristSketchpad.Logic
             matrix = matrix.RemoveRow(vertexIndex);
         }
 
+        // returns array of edges incident on v that start at v
+        public CoordinateLine[] getEdgesOn(Vertex v)
+        {
+            // row of vertex v
+            int row = vertices.IndexOf(v);
+
+            // return no edges when vertex not in matrix
+            if(row == -1)
+            {
+                return new CoordinateLine[0];
+            }
+
+            List<CoordinateLine> incidentEdges = new List<CoordinateLine>();
+
+            // check if each edge (column) in matrix is incident on v
+            for (int i = 0; i < this.matrix.ColumnCount; ++i)
+            {
+                Vector<double> column = this.matrix.Column(i);
+
+                if (column[row] > 0)
+                {
+                    // row of the other endpoint for this edge
+                    int endRow = row;
+                    for(int j = 0; j < column.Count; ++j)
+                    {
+                        if (column[j] > 0 && j != row)
+                        {
+                            endRow = j;
+                            break;
+                        }
+                    }
+
+                    // add found incident edge to list
+                    incidentEdges.Add(new CoordinateLine(vertices[row].Location, vertices[endRow].Location));
+                }
+            }
+
+            return incidentEdges.ToArray();
+        }
 
         public CoordinateLine[] getEdges()
         {
