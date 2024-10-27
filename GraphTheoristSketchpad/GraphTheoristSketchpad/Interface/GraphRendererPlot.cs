@@ -96,36 +96,40 @@ namespace GraphTheoristSketchpad.Interface
                         }
                     }
 
-                    Debug.Assert(edgeAngles.Count != 0);
+                    // unit vector pointing to middle of largest angle
+                    Pixel direction = new Pixel(1, 0);
 
-                    // sort by angle
-                    edgeAngles.Sort((KeyValuePair<CoordinateLine, double> x, KeyValuePair<CoordinateLine, double> y) => { return x.Value < y.Value ? -1 : 1; });
-
-                    // counter clockwise angle of edge with largest angle
-                    double largestEdgeAngle = edgeAngles.First().Value;
-
-                    // largest counter clockwise angle angle between two edges
-                    double largestAngle = 0;
-                    double lastAngle = edgeAngles.Last().Value - 2*Math.PI;
-
-                    // find largest counter clockwise angle
-                    foreach(KeyValuePair<CoordinateLine, double> edgeAngle in edgeAngles)
+                    // find largest angle between edges
+                    if (edgeAngles.Count != 0)
                     {
-                        double angle = edgeAngle.Value - lastAngle;
+                        // sort by angle
+                        edgeAngles.Sort((KeyValuePair<CoordinateLine, double> x, KeyValuePair<CoordinateLine, double> y) => { return x.Value < y.Value ? -1 : 1; });
 
-                        if(angle > largestAngle)
+                        // counter clockwise angle of edge with largest angle
+                        double largestEdgeAngle = edgeAngles.First().Value;
+
+                        // largest counter clockwise angle angle between two edges
+                        double largestAngle = 0;
+                        double lastAngle = edgeAngles.Last().Value - 2 * Math.PI;
+
+                        // find largest counter clockwise angle
+                        foreach (KeyValuePair<CoordinateLine, double> edgeAngle in edgeAngles)
                         {
-                            largestEdgeAngle = edgeAngle.Value;
-                            largestAngle = angle;
+                            double angle = edgeAngle.Value - lastAngle;
+
+                            if (angle > largestAngle)
+                            {
+                                largestEdgeAngle = edgeAngle.Value;
+                                largestAngle = angle;
+                            }
+
+                            lastAngle = edgeAngle.Value;
                         }
 
-                        lastAngle = edgeAngle.Value;
+                        double directionAngle = largestEdgeAngle - largestAngle / 2;
+
+                        direction = new Pixel(Math.Cos(directionAngle), -Math.Sin(directionAngle));
                     }
-
-                    double directionAngle = largestEdgeAngle - largestAngle/2;
-
-                    // unit vector pointing to middle of largest angle
-                    Pixel direction = new Pixel(Math.Cos(directionAngle), -Math.Sin(directionAngle));
 
                     // draw loops
                     for (int i = 1; i <= sameEdges[edge]; ++i)
