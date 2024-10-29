@@ -210,5 +210,20 @@ namespace GraphTheoristSketchpad.Interface
             // Create the control point at the offset
             return new Pixel(midX + offsetX, midY + offsetY);
         }
+
+        // returns vertices contained in rectangle
+        public Vertex[] getVerticesInRect(CoordinateRect rect)
+        {
+            List<Vertex> vertices = new List<Vertex>();
+            foreach(Vertex v in graph.Vertices)
+            {
+                if(rect.Contains(v.Location))
+                {
+                    vertices.Add(v);
+                }
+            }
+
+            return vertices.ToArray();
+        }
     }
 }
