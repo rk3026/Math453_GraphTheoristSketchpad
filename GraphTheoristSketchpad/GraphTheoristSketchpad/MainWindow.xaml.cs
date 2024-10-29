@@ -24,6 +24,14 @@ namespace GraphTheoristSketchpad
         private Vertex CurrentlyLeftClickedVertex = null;
         private Vertex CurrentlyRightClickedVertex = null;
 
+        // For the selection rectangle //
+        Coordinates MouseDownCoordinates;
+        Coordinates MouseNowCoordinates;
+        CoordinateRect MouseSlectionRect => new(MouseDownCoordinates, MouseNowCoordinates);
+        bool MouseIsDown = false;
+        readonly ScottPlot.Plottables.Rectangle RectanglePlot;
+        // End for the selection rect //
+
         public MainWindow()
         {
             InitializeComponent();
@@ -49,10 +57,58 @@ namespace GraphTheoristSketchpad
             GraphView.Plot.Axes.SquareUnits();
 
             GraphView.MouseMove += FormsPlot1_MouseMove; // Separate so each mode has its own function.
+            GraphView.MouseDown += FormsPlot1_MouseDown;
+            GraphView.MouseUp += FormsPlot1_MouseUp;
             GraphView.MouseLeftButtonDown += FormsPlot1_MouseLeftButtonDown;
             GraphView.MouseLeftButtonUp += FormsPlot1_MouseLeftButtonUp;
             GraphView.MouseRightButtonDown += FormsPlot1_MouseRightButtonDown;
             graphRendererPlot.graph.GraphChanged += UpdateIncidenceMatrixText;
+        }
+
+        private void FormsPlot1_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            /*
+            double dpiScale = GetDpiScale();
+            MouseIsDown = true;
+            RectanglePlot.IsVisible = true;
+            Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
+
+            Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
+            MouseDownCoordinates = mouseLocation;
+            */
+        }
+
+        private void FormsPlot1_MouseUp(object? sender, MouseEventArgs e)
+        {
+            /*
+            MouseIsDown = false;
+            RectanglePlot.IsVisible = false;
+
+            // clear old markers
+            GraphView.Plot.Remove<ScottPlot.Plottables.Marker>();
+
+            // identify selectedPoints
+            var selectedPoints = getVerticesInRect(RectanglePlot);
+
+            // add markers to outline selected points
+            foreach (Vertex selectedPoint in selectedPoints)
+            {
+                var newMarker = formsPlot1.Plot.Add.Marker(selectedPoint);
+                newMarker.MarkerStyle.Shape = MarkerShape.OpenCircle;
+                newMarker.MarkerStyle.Size = 10;
+                newMarker.MarkerStyle.FillColor = Colors.Red.WithAlpha(.2);
+                newMarker.MarkerStyle.LineColor = Colors.Red;
+                newMarker.MarkerStyle.LineWidth = 1;
+            }
+
+            // reset the mouse positions
+            MouseDownCoordinates = Coordinates.NaN;
+            MouseNowCoordinates = Coordinates.NaN;
+
+            // update the plot
+            formsPlot1.Refresh();
+            formsPlot1.UserInputProcessor.Enable(); // re-enable the default click-drag-pan behavior
+            */
         }
 
         private void UpdateIncidenceMatrixText(object? sender, EventArgs e)
@@ -75,13 +131,19 @@ namespace GraphTheoristSketchpad
                 // clear existing menu items
                 GraphView.Menu?.Clear();
 
-                // add menu items with custom actions
+                // Add menu items with custom actions
                 GraphView.Menu?.Add("Rename", (graphView) =>
                 {
-                    //GraphView.KeyDown += renameVertex;
+                    // Unsubscribe from any existing renameVertex handlers
+                    GraphView.TextInput -= renameVertex;
+
+                    // Subscribe to the renameVertex event
                     GraphView.TextInput += renameVertex;
+
+                    // Refresh the graph view
                     graphView.Refresh();
                 });
+
 
                 GraphView.Menu?.Add("Change Color", (graphView) =>
                 {
