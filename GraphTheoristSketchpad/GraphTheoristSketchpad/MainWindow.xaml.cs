@@ -23,11 +23,13 @@ namespace GraphTheoristSketchpad
         private GraphRendererPlot graphRendererPlot = new GraphRendererPlot();
         private Vertex CurrentlyLeftClickedVertex = null;
         private Vertex CurrentlyRightClickedVertex = null;
+        private List<Vertex> selectedVertices = new List<Vertex>();
 
         // For the selection rectangle //
         Coordinates MouseDownCoordinates;
         Coordinates MouseNowCoordinates;
-        CoordinateRect MouseSlectionRect => new(MouseDownCoordinates, MouseNowCoordinates);
+        Coordinates LastMouseLocation;
+        CoordinateRect MouseSelectionRect => new(MouseDownCoordinates, MouseNowCoordinates);
         bool MouseIsDown = false;
         readonly ScottPlot.Plottables.Rectangle RectanglePlot;
         // End for the selection rect //
@@ -63,24 +65,31 @@ namespace GraphTheoristSketchpad
             GraphView.MouseLeftButtonUp += FormsPlot1_MouseLeftButtonUp;
             GraphView.MouseRightButtonDown += FormsPlot1_MouseRightButtonDown;
             graphRendererPlot.graph.GraphChanged += UpdateIncidenceMatrixText;
+
+            RectanglePlot = GraphView.Plot.Add.Rectangle(0, 0, 0, 0);
         }
 
         private void FormsPlot1_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            /*
-            double dpiScale = GetDpiScale();
             MouseIsDown = true;
             RectanglePlot.IsVisible = true;
+            if (CurrentlyLeftClickedVertex != null)
+            {
+                return;
+            }
+            else
+            {
+                selectedVertices.Clear();
+            }
+            double dpiScale = GetDpiScale();
             Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
-
             Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
             MouseDownCoordinates = mouseLocation;
-            */
+            //GraphView.UserInputProcessor.IsEnabled = false; // re-enable the default click-drag-pan behavior
         }
 
         private void FormsPlot1_MouseUp(object? sender, MouseEventArgs e)
         {
-            /*
             MouseIsDown = false;
             RectanglePlot.IsVisible = false;
 
@@ -88,12 +97,13 @@ namespace GraphTheoristSketchpad
             GraphView.Plot.Remove<ScottPlot.Plottables.Marker>();
 
             // identify selectedPoints
-            var selectedPoints = getVerticesInRect(RectanglePlot);
+            List<Vertex> selectedPoints = graphRendererPlot.getVerticesInRect(MouseSelectionRect);
+            selectedVertices = selectedPoints;
 
             // add markers to outline selected points
             foreach (Vertex selectedPoint in selectedPoints)
             {
-                var newMarker = formsPlot1.Plot.Add.Marker(selectedPoint);
+                var newMarker = GraphView.Plot.Add.Marker(selectedPoint.Location);
                 newMarker.MarkerStyle.Shape = MarkerShape.OpenCircle;
                 newMarker.MarkerStyle.Size = 10;
                 newMarker.MarkerStyle.FillColor = Colors.Red.WithAlpha(.2);
@@ -106,9 +116,8 @@ namespace GraphTheoristSketchpad
             MouseNowCoordinates = Coordinates.NaN;
 
             // update the plot
-            formsPlot1.Refresh();
-            formsPlot1.UserInputProcessor.Enable(); // re-enable the default click-drag-pan behavior
-            */
+            GraphView.Refresh();
+            //GraphView.UserInputProcessor.IsEnabled = true; // re-enable the default click-drag-pan behavior
         }
 
         private void UpdateIncidenceMatrixText(object? sender, EventArgs e)
@@ -379,6 +388,7 @@ namespace GraphTheoristSketchpad
                 DeleteVertexOrEdge(mouseLocation.X, mouseLocation.Y);
             }
 
+            // OLD CODE FOR MOVING A SINGLE VERTEX
             // If in Edit mode and a vertex is being dragged, update its position
             if (CurrentlyLeftClickedVertex != null && currentMode == ToolMode.Edit)
             {
@@ -393,6 +403,20 @@ namespace GraphTheoristSketchpad
                 graphRendererPlot.temporaryLine = line;
                 GraphView.Refresh();
             }
+
+            if (currentMode == ToolMode.Edit && MouseIsDown)
+            {
+                Coordinates delta = new Coordinates(mouseLocation.X - LastMouseLocation.X, mouseLocation.Y - LastMouseLocation.Y);
+                foreach (Vertex v in selectedVertices)
+                {
+                    v.Location = new Coordinates(delta.X + v.Location.X, delta.Y+v.Location.Y);
+
+                }
+                MouseNowCoordinates = mouseLocation;
+                RectanglePlot.CoordinateRect = MouseSelectionRect;
+                GraphView.Refresh();
+            }
+            LastMouseLocation = mouseLocation;
         }
 
 

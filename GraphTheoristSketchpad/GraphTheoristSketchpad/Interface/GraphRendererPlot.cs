@@ -212,7 +212,7 @@ namespace GraphTheoristSketchpad.Interface
         }
 
         // returns vertices contained in rectangle
-        public Vertex[] getVerticesInRect(CoordinateRect rect)
+        public List<Vertex> getVerticesInRect(CoordinateRect rect)
         {
             List<Vertex> vertices = new List<Vertex>();
             foreach(Vertex v in graph.Vertices)
@@ -223,7 +223,7 @@ namespace GraphTheoristSketchpad.Interface
                 }
             }
 
-            return vertices.ToArray();
+            return vertices;
         }
     }
 }
