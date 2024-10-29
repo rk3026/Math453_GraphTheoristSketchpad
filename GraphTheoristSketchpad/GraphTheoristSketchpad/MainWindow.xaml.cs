@@ -242,7 +242,7 @@ namespace GraphTheoristSketchpad
         private void btnErase_Click(object sender, RoutedEventArgs e)
         {
             // Load the custom cursor from the Resources folder
-            var cursorStream = Application.GetResourceStream(new Uri("pack://application:,,,/Resources/67732.cur")).Stream;
+            var cursorStream = Application.GetResourceStream(new Uri("pack://application:,,,/Resources/eraser.cur")).Stream;
             GraphView.Cursor = new Cursor(cursorStream);
             currentMode = ToolMode.Erase;
             SetButtonSelected(btnErase);
