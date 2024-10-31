@@ -68,9 +68,28 @@ namespace GraphTheoristSketchpad
 
             RectanglePlot = GraphView.Plot.Add.Rectangle(0, 0, 0, 0);
         }
+        private void UpdateSelectionMarkers()
+        {
+            // Clear previous markers
+            GraphView.Plot.Remove<ScottPlot.Plottables.Marker>();
+
+            // Add markers for selected vertices
+            foreach (Vertex vertex in selectedVertices)
+            {
+                var newMarker = GraphView.Plot.Add.Marker(vertex.Location);
+                newMarker.MarkerStyle.Shape = MarkerShape.OpenCircle;
+                newMarker.MarkerStyle.Size = 10;
+                newMarker.MarkerStyle.FillColor = Colors.Red.WithAlpha(.2); // Selected color
+                newMarker.MarkerStyle.LineColor = Colors.Red; // Outline color
+                newMarker.MarkerStyle.LineWidth = 1;
+            }
+            GraphView.Refresh(); // Refresh to display the updated visuals
+        }
 
         private void FormsPlot1_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            bool isShiftPressed = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+            if (currentMode != ToolMode.Edit || isShiftPressed) return;
             MouseIsDown = true;
             RectanglePlot.IsVisible = true;
             if (CurrentlyLeftClickedVertex != null)
@@ -90,26 +109,19 @@ namespace GraphTheoristSketchpad
 
         private void FormsPlot1_MouseUp(object? sender, MouseEventArgs e)
         {
+            if (currentMode != ToolMode.Edit) return;
+            
             MouseIsDown = false;
             RectanglePlot.IsVisible = false;
 
-            // clear old markers
-            GraphView.Plot.Remove<ScottPlot.Plottables.Marker>();
-
             // identify selectedPoints
             List<Vertex> selectedPoints = graphRendererPlot.getVerticesInRect(MouseSelectionRect);
-            selectedVertices = selectedPoints;
-
-            // add markers to outline selected points
-            foreach (Vertex selectedPoint in selectedPoints)
+            foreach (Vertex vertex in selectedPoints)
             {
-                var newMarker = GraphView.Plot.Add.Marker(selectedPoint.Location);
-                newMarker.MarkerStyle.Shape = MarkerShape.OpenCircle;
-                newMarker.MarkerStyle.Size = 10;
-                newMarker.MarkerStyle.FillColor = Colors.Red.WithAlpha(.2);
-                newMarker.MarkerStyle.LineColor = Colors.Red;
-                newMarker.MarkerStyle.LineWidth = 1;
+                selectedVertices.Add(vertex);
             }
+
+            UpdateSelectionMarkers();
 
             // reset the mouse positions
             MouseDownCoordinates = Coordinates.NaN;
@@ -260,7 +272,7 @@ namespace GraphTheoristSketchpad
             SetButtonSelected(btnEdit);
         }
 
-        private void ToggleButton_Click(object sender, RoutedEventArgs e)
+        private void IncidenceMatrixButton_Click(object sender, RoutedEventArgs e)
         {
             // Toggle the visibility of the IncidenceMatrixTextBox
             if (IncidenceMatrixToggleButton.IsChecked == true)
@@ -273,13 +285,39 @@ namespace GraphTheoristSketchpad
             }
         }
 
+        private void ToggleInfoPanelButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Check if the button is toggled on or off and set the visibility accordingly.
+            if (ToggleInfoPanelButton.IsChecked == true)
+            {
+                // Set the panel visibility to visible
+                InfoPanel.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                // Set the panel visibility to collapsed
+                InfoPanel.Visibility = Visibility.Collapsed;
+            }
+        }
+
+
+        private void btnToggleDirected_Checked(object sender, RoutedEventArgs e)
+        {
+            // Convert to a directed graph
+        }
+        private void btnToggleDirected_Unchecked(object sender, RoutedEventArgs e)
+        {
+            // Convert from directed to undirected
+        }
+
         private void FormsPlot1_MouseLeftButtonDown(object? sender, MouseEventArgs e)
         {
-            // Dragging Vertices:
             double dpiScale = GetDpiScale();
             Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
-
             Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
+
+            // Check if Shift is pressed
+            bool isShiftPressed = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
 
             // Based on current mode, modify the graph:
             switch (currentMode)
@@ -288,29 +326,52 @@ namespace GraphTheoristSketchpad
                     Console.WriteLine("Adding a vertex at: " + mouseLocation.X + ", " + mouseLocation.Y);
                     AddVertex(mouseLocation.X, mouseLocation.Y);
                     break;
+
                 case ToolMode.AddEdge:
                     Vertex? firstVertexIncident = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
                     CurrentlyLeftClickedVertex = firstVertexIncident;
                     break;
+
                 case ToolMode.Edit:
                     Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
                     if (nearestVertex != null)
                     {
-                        CurrentlyLeftClickedVertex = nearestVertex;
+                        if (isShiftPressed)
+                        {
+                            // Shift clicked, toggle selection
+                            if (selectedVertices.Contains(nearestVertex))
+                            {
+                                selectedVertices.Remove(nearestVertex); // Remove from selection
+                            }
+                            else
+                            {
+                                selectedVertices.Add(nearestVertex); // Add to selection
+                            }
+                            GraphView.Refresh(); // Refresh to update vertex appearances
+                            UpdateSelectionMarkers();
+                        }
+                        else
+                        {
+                            CurrentlyLeftClickedVertex = nearestVertex; // Normal click behavior
+                        }
                     }
                     break;
+
                 case ToolMode.Erase:
                     Console.WriteLine("Deleting items at: " + mouseLocation.X + ", " + mouseLocation.Y);
                     DeleteVertexOrEdge(mouseLocation.X, mouseLocation.Y);
                     break;
+
                 case ToolMode.View:
                     break;
+
                 default:
                     break;
-
             }
+
             GraphView.Interaction.Disable();
         }
+
 
         private void DeleteVertexOrEdge(double x, double y)
         {
@@ -406,6 +467,11 @@ namespace GraphTheoristSketchpad
 
             if (currentMode == ToolMode.Edit && MouseIsDown)
             {
+                if (CurrentlyLeftClickedVertex != null && !selectedVertices.Contains(CurrentlyLeftClickedVertex))
+                {
+                    selectedVertices.Clear();
+                    return;
+                }
                 Coordinates delta = new Coordinates(mouseLocation.X - LastMouseLocation.X, mouseLocation.Y - LastMouseLocation.Y);
                 foreach (Vertex v in selectedVertices)
                 {
@@ -415,6 +481,7 @@ namespace GraphTheoristSketchpad
                 MouseNowCoordinates = mouseLocation;
                 RectanglePlot.CoordinateRect = MouseSelectionRect;
                 GraphView.Refresh();
+                UpdateSelectionMarkers();
             }
             LastMouseLocation = mouseLocation;
         }

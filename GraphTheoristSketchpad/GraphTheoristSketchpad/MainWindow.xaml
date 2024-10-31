@@ -25,17 +25,27 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
+        <Style TargetType="ToggleButton" x:Key="ToolButtonStyleToggle">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="Margin" Value="5"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="BorderBrush" Value="DarkGray"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="Selected">
+                    <Setter Property="Background" Value="LightBlue"/>
+                    <Setter Property="Foreground" Value="White"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </Window.Resources>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-
+    <DockPanel>
         <!-- Menu Bar -->
-        <Menu Grid.Row="0">
+        <Menu DockPanel.Dock="Top">
             <MenuItem Header="File">
                 <MenuItem Header="New" Click="MenuItem_New_Click"/>
                 <MenuItem Header="Open" Click="MenuItem_Open_Click"/>
@@ -48,39 +58,53 @@
         </Menu>
 
         <!-- Toolbar -->
-        <ToolBarTray Grid.Row="1">
+        <ToolBarTray DockPanel.Dock="Top">
             <ToolBar>
                 <Button Name="btnAddVertex" Content="Add Vertex" Click="btnAddVertex_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnAddEdge" Content="Add Edge" Click="btnAddEdge_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnErase" Content="Erase" Click="btnErase_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnView" Content="View" Click="btnView_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnEdit" Content="Edit" Click="btnEdit_Click" Style="{StaticResource ToolButtonStyle}" />
+                <ToggleButton Name="btnToggleDirected" Content="Directed" Checked="btnToggleDirected_Checked" Unchecked="btnToggleDirected_Unchecked" Style="{StaticResource ToolButtonStyleToggle}" />
+                <ToggleButton x:Name="ToggleInfoPanelButton" Content="Show Info" Click="ToggleInfoPanelButton_Click" Style="{StaticResource ToolButtonStyleToggle}" />
             </ToolBar>
         </ToolBarTray>
 
-        <!-- Main Graph Area -->
-        <Grid Grid.Row="2">
-            <ScottPlot:WpfPlot x:Name="GraphView" Margin="0"/>
-            <!-- Popup for ColorPicker -->
+        <!-- Main Content Area -->
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <!-- Graph takes up remaining space -->
+                <ColumnDefinition Width="Auto" />
+                <!-- Info Panel has a fixed width when visible -->
+            </Grid.ColumnDefinitions>
+
+            <!-- Graph Area -->
+            <ScottPlot:WpfPlot x:Name="GraphView" Margin="5" Grid.Column="0" />
+
+            <!-- Popup for Color Picker -->
             <Popup x:Name="ColorPickerPopup" Placement="Mouse" StaysOpen="False">
                 <xctk:ColorPicker x:Name="VertexColorPicker" Width="200" Height="30" />
             </Popup>
 
-            <!-- StackPanel for ToggleButton, TextBox, and ColorPicker -->
-            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Width="250" Margin="10">
-                <!-- ToggleButton to Show/Hide the TextBox -->
-                <ToggleButton x:Name="IncidenceMatrixToggleButton" Content="Show Incidence Matrix" Click="ToggleButton_Click"/>
-
-                <!-- Collapsible TextBox -->
-                <TextBox x:Name="IncidenceMatrixTextBox" Margin="0,5,0,0"
-                         Visibility="Collapsed"
-                         Height="100"
-                         TextWrapping="Wrap"
-                         VerticalScrollBarVisibility="Auto"
-                         HorizontalScrollBarVisibility="Auto"
-                         Background="LightGray"
-                         Foreground="Black"/>
-            </StackPanel>
+            <!-- Side Info Panel (collapsible) -->
+            <Border x:Name="InfoPanel" Background="LightGray" Width="250" Grid.Column="1"
+                    Visibility="{Binding IsChecked, ElementName=ToggleInfoPanelButton, Converter={StaticResource BoolToVisibilityConverter}}">
+                <StackPanel Margin="10">
+                    <TextBlock Text="Graph Information" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                    <ToggleButton Name="IncidenceMatrixToggleButton" Content="Incidence Matrix" Style="{StaticResource ToolButtonStyleToggle}" Click="IncidenceMatrixButton_Click"/>
+                    <!-- Collapsible TextBox -->
+                    <TextBox x:Name="IncidenceMatrixTextBox" Margin="0,5,0,0"
+                             Visibility="Collapsed"
+                             Height="100"
+                             TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto"
+                             HorizontalScrollBarVisibility="Auto"
+                             Background="LightGray"
+                             Foreground="Black"/>
+                    <TextBlock Text="Additional graph details or metrics can go here." TextWrapping="Wrap"/>
+                </StackPanel>
+            </Border>
         </Grid>
-    </Grid>
+    </DockPanel>
 </Window>
