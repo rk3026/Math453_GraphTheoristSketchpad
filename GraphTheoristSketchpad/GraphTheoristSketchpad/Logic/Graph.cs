@@ -225,5 +225,10 @@ namespace GraphTheoristSketchpad.Logic
         {
             throw new NotImplementedException();
         }
+
+        public int getEdgeCount()
+        {
+            return this.matrix.getEdgeCount();
+        }
     }
 }

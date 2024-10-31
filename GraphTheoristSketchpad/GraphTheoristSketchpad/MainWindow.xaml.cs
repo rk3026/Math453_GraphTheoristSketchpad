@@ -64,10 +64,18 @@ namespace GraphTheoristSketchpad
             GraphView.MouseLeftButtonDown += FormsPlot1_MouseLeftButtonDown;
             GraphView.MouseLeftButtonUp += FormsPlot1_MouseLeftButtonUp;
             GraphView.MouseRightButtonDown += FormsPlot1_MouseRightButtonDown;
-            graphRendererPlot.graph.GraphChanged += UpdateIncidenceMatrixText;
+            graphRendererPlot.graph.GraphChanged += UpdateGraphInfoUI;
 
             RectanglePlot = GraphView.Plot.Add.Rectangle(0, 0, 0, 0);
         }
+
+        private void UpdateGraphInfoUI(object? sender, EventArgs e)
+        {
+            VertexCountTextbox.Text = this.graphRendererPlot.graph.Vertices.Count.ToString();
+            EdgeCountTextbox.Text = this.graphRendererPlot.graph.getEdgeCount().ToString();
+            IncidenceMatrixTextBox.Text = this.graphRendererPlot.graph.GetIncidenceMatrix();
+        }
+
         private void UpdateSelectionMarkers()
         {
             // Clear previous markers
@@ -77,19 +85,29 @@ namespace GraphTheoristSketchpad
             foreach (Vertex vertex in selectedVertices)
             {
                 var newMarker = GraphView.Plot.Add.Marker(vertex.Location);
-                newMarker.MarkerStyle.Shape = MarkerShape.OpenCircle;
-                newMarker.MarkerStyle.Size = 10;
-                newMarker.MarkerStyle.FillColor = Colors.Red.WithAlpha(.2); // Selected color
-                newMarker.MarkerStyle.LineColor = Colors.Red; // Outline color
+                newMarker.MarkerStyle.Shape = MarkerShape.FilledCircle;
+                newMarker.MarkerStyle.Size = 30;
+                newMarker.MarkerStyle.FillColor = Colors.Blue.WithOpacity(0.4); // Selected color
+                newMarker.MarkerStyle.LineColor = Colors.Blue; // Outline color
                 newMarker.MarkerStyle.LineWidth = 1;
             }
             GraphView.Refresh(); // Refresh to display the updated visuals
         }
 
+        // ONLY for the edit mode:
         private void FormsPlot1_MouseDown(object sender, MouseButtonEventArgs e)
         {
+
             bool isShiftPressed = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
-            if (currentMode != ToolMode.Edit || isShiftPressed) return;
+            if (currentMode != ToolMode.Edit) {
+                selectedVertices.Clear();
+                UpdateSelectionMarkers();
+                return;
+            }
+            else if (isShiftPressed)
+            {
+                return;
+            }
             MouseIsDown = true;
             RectanglePlot.IsVisible = true;
             if (CurrentlyLeftClickedVertex != null)
@@ -107,6 +125,7 @@ namespace GraphTheoristSketchpad
             //GraphView.UserInputProcessor.IsEnabled = false; // re-enable the default click-drag-pan behavior
         }
 
+        // ONLY for the edit mode:
         private void FormsPlot1_MouseUp(object? sender, MouseEventArgs e)
         {
             if (currentMode != ToolMode.Edit) return;
@@ -130,11 +149,6 @@ namespace GraphTheoristSketchpad
             // update the plot
             GraphView.Refresh();
             //GraphView.UserInputProcessor.IsEnabled = true; // re-enable the default click-drag-pan behavior
-        }
-
-        private void UpdateIncidenceMatrixText(object? sender, EventArgs e)
-        {
-            IncidenceMatrixTextBox.Text = this.graphRendererPlot.graph.GetIncidenceMatrix();
         }
 
         private void FormsPlot1_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
@@ -224,6 +238,7 @@ namespace GraphTheoristSketchpad
             {
                 CurrentlyRightClickedVertex.Label += e.Text;
             }
+            UpdateGraphInfoUI(this, new EventArgs());
             GraphView.Refresh();
         }
 
@@ -270,19 +285,6 @@ namespace GraphTheoristSketchpad
         {
             currentMode = ToolMode.Edit;
             SetButtonSelected(btnEdit);
-        }
-
-        private void IncidenceMatrixButton_Click(object sender, RoutedEventArgs e)
-        {
-            // Toggle the visibility of the IncidenceMatrixTextBox
-            if (IncidenceMatrixToggleButton.IsChecked == true)
-            {
-                IncidenceMatrixTextBox.Visibility = Visibility.Visible;
-            }
-            else
-            {
-                IncidenceMatrixTextBox.Visibility = Visibility.Collapsed;
-            }
         }
 
         private void ToggleInfoPanelButton_Click(object sender, RoutedEventArgs e)

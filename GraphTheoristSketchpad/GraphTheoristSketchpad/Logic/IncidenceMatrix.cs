@@ -28,17 +28,40 @@ namespace GraphTheoristSketchpad.Logic
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < this.matrix.RowCount; ++i)
+
+            // Calculate padding based on longest vertex label
+            int maxLabelWidth = 0;
+            if (vertices.Count > 0 )
             {
+                maxLabelWidth = vertices.Max(v => v.Label.Length);
+            }
+            int padding = maxLabelWidth + 1; // Extra space for readability
+
+            // Add column headers with padding
+            sb.Append(' ', padding); // Space for row headers
+            for (int j = 0; j < this.matrix.ColumnCount; j++)
+            {
+                sb.Append($"e{j + 1}".PadRight(4)); // e1, e2, etc., with padding
+            }
+            sb.AppendLine();
+
+            // Add rows with row headers
+            for (int i = 0; i < this.matrix.RowCount; i++)
+            {
+                sb.Append(vertices[i].Label.PadRight(padding)); // Row header with padding
                 Vector<double> row = this.matrix.Row(i);
+
                 for (int j = 0; j < row.Count; j++)
                 {
-                    sb.Append(row[j] + " ");
+                    sb.Append($"{row[j],4} "); // Align matrix values with padding
                 }
-                sb.Append('\n');
+                sb.AppendLine();
             }
+
             return sb.ToString();
         }
+
+
 
         // Adds a column to the matrix for this new edge.
         // Also adds rows if endpoints are new vertices.
@@ -199,6 +222,11 @@ namespace GraphTheoristSketchpad.Logic
             }
 
             return edges;
+        }
+
+        public int getEdgeCount()
+        {
+            return this.matrix.ColumnCount;
         }
     }
 }

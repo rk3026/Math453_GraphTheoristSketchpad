@@ -89,21 +89,28 @@
 
             <!-- Side Info Panel (collapsible) -->
             <Border x:Name="InfoPanel" Background="LightGray" Width="250" Grid.Column="1"
-                    Visibility="{Binding IsChecked, ElementName=ToggleInfoPanelButton, Converter={StaticResource BoolToVisibilityConverter}}">
-                <StackPanel Margin="10">
-                    <TextBlock Text="Graph Information" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                    <ToggleButton Name="IncidenceMatrixToggleButton" Content="Incidence Matrix" Style="{StaticResource ToolButtonStyleToggle}" Click="IncidenceMatrixButton_Click"/>
-                    <!-- Collapsible TextBox -->
-                    <TextBox x:Name="IncidenceMatrixTextBox" Margin="0,5,0,0"
-                             Visibility="Collapsed"
-                             Height="100"
-                             TextWrapping="Wrap"
-                             VerticalScrollBarVisibility="Auto"
-                             HorizontalScrollBarVisibility="Auto"
-                             Background="LightGray"
-                             Foreground="Black"/>
-                    <TextBlock Text="Additional graph details or metrics can go here." TextWrapping="Wrap"/>
-                </StackPanel>
+        Visibility="{Binding IsChecked, ElementName=ToggleInfoPanelButton, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10">
+                        <TextBlock Text="Graph Information" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                        <Label Content="Incidence Matrix:" />
+                        <TextBox x:Name="IncidenceMatrixTextBox" Margin="0,5,0,0"
+                     IsReadOnly="True"
+                     Height="100"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     HorizontalScrollBarVisibility="Auto"
+                     Background="LightGray"
+                     Foreground="Black"/>
+                        <Label Content="Number of Vertices: "/>
+                        <TextBox Name="VertexCountTextbox" IsReadOnly="True"/>
+                        <Label Content="Number of Edges: "/>
+                        <TextBox Name="EdgeCountTextbox" IsReadOnly="True"/>
+                        <Label Content="Number of Components: "/>
+                        <TextBox Name="ComponentCountTextbox" IsReadOnly="True"/>
+                        <TextBlock Text="Additional graph details or metrics can go here." TextWrapping="Wrap"/>
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
         </Grid>
     </DockPanel>
