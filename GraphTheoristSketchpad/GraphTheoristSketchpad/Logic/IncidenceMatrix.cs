@@ -13,6 +13,32 @@ namespace GraphTheoristSketchpad.Logic
 {
     class IncidenceMatrix
     {
+        public bool IsDirected
+        {
+            get
+            {
+                return isDirected;
+            }
+
+            set
+            {
+                if (isDirected != value)
+                {
+                    isDirected = value;
+                    if (isDirected)
+                    {
+                        ToDirected();
+                    }
+                    else
+                    {
+                        ToUndirected();
+                    }
+                }
+            }
+        }
+
+        private bool isDirected;
+
         // Vertex rows and edge columns for weighted graph.
         private Matrix<double> matrix;
 
@@ -42,28 +68,28 @@ namespace GraphTheoristSketchpad.Logic
 
         // Adds a column to the matrix for this new edge.
         // Also adds rows if endpoints are new vertices.
-        public void AddEdge(Vertex start, Vertex end, double weight)
+        public void AddEdge(Vertex tail, Vertex head, double weight)
         {
-            int startIndex;
-            int endIndex;
+            int tailIndex;
+            int headIndex;
 
-            if((startIndex = vertices.IndexOf(start)) == -1)
+            if((tailIndex = vertices.IndexOf(tail)) == -1)
             {
-                startIndex = vertices.Count;
-                vertices.Add(start);
+                tailIndex = vertices.Count;
+                vertices.Add(tail);
             }
 
-            if ((endIndex = vertices.IndexOf(end)) == -1)
+            if ((headIndex = vertices.IndexOf(head)) == -1)
             {
-                endIndex = vertices.Count;
-                vertices.Add(end);
+                headIndex = vertices.Count;
+                vertices.Add(head);
             }
 
             // new matrix with new edge.
             Matrix<double> newMatrix = CreateMatrix.Sparse<double>(vertices.Count, matrix.ColumnCount+1);
             newMatrix.SetSubMatrix(0, 0, matrix);
-            newMatrix[startIndex, newMatrix.ColumnCount - 1] = weight;
-            newMatrix[endIndex, newMatrix.ColumnCount - 1] = weight;
+            newMatrix[tailIndex, newMatrix.ColumnCount - 1] = weight;
+            newMatrix[headIndex, newMatrix.ColumnCount - 1] = weight;
             this.matrix = newMatrix;
         }
 
@@ -161,6 +187,7 @@ namespace GraphTheoristSketchpad.Logic
             return incidentEdges.ToArray();
         }
 
+        // get edges where start is tail and end is head
         public CoordinateLine[] getEdges()
         {
             CoordinateLine[] edges = new CoordinateLine[this.matrix.ColumnCount];
@@ -170,35 +197,120 @@ namespace GraphTheoristSketchpad.Logic
                 Vector<double> column = this.matrix.Column(i);
 
                 // line start
-                Coordinates end1 = new Coordinates(0, 0);
+                Coordinates? tail = null;
 
                 // line end
-                Coordinates end2 = new Coordinates(1, 1);
+                Coordinates? head = null;
 
-                // get first line endpoint
+                // get head and tail of line.
                 for (int j = 0; j < column.Count; ++j)
                 {
-                    // check if vertex is incident on edge
-                    if (column[j] > 0d)
+                    // get first endpoint
+                    if (column[j] != 0d && tail == null && head == null)
                     {
-                        end1 = this.vertices[j].Location;
+                        if (column[j] < 0d)
+                            head = this.vertices[j].Location;
+                        else
+                            tail = this.vertices[j].Location;
                     }
+                    // get second endpoint when first one is already set
+                    else if (column[j] != 0d)
+                        if(tail == null)
+                            tail = this.vertices[j].Location;
+                        else
+                            head = this.vertices[j].Location;
                 }
 
-                // get second line endpoint
-                for (int j = column.Count - 1; j >= 0; --j)
+                // edge is loop
+                if (head == null)
                 {
-                    // check if vertex is incident on edge
-                    if (column[j] > 0d)
-                    {
-                        end2 = this.vertices[j].Location;
-                    }
+                    edges[i] = new CoordinateLine((Coordinates)tail!, (Coordinates)tail!);
                 }
-
-                edges[i] = new CoordinateLine(end1, end2);
+                else
+                {
+                    edges[i] = new CoordinateLine((Coordinates)tail!, (Coordinates)head!);
+                }
             }
 
             return edges;
+        }
+
+        // converts matrix to an incident matrix for a directed graph
+        // edges become two parallel arcs directed oppositely.
+        private void ToDirected()
+        {
+            List<Vector<double>> columns = new List<Vector<double>>();
+
+            for (int c = 0; c < this.matrix.ColumnCount; ++c)
+            {
+                Vector<double> col = this.matrix.Column(c);
+
+                int? tailIndex = null;
+                int? headIndex = null;
+                // get tail and head of edge
+                for (int r = 0; r < col.Count; r++)
+                {
+                    if (col[r] != 0)
+                    {
+                        if(tailIndex != null)
+                            tailIndex = r;
+                        else
+                            headIndex = r;
+                    }
+                }
+
+                // create two arcs when edge isnt a loop
+                if (headIndex != null)
+                {
+                    // create new arcs for both possible directions for edge.
+                    Vector<double> newArc1 = col.Clone();
+                    newArc1[(int)tailIndex!] *= -1;
+                    columns.Add(newArc1);
+
+                    Vector<double> newArc2 = col.Clone();
+                    newArc2[(int)headIndex!] *= -1;
+                    columns.Add(newArc2);
+                }
+                // create one loop to one loop
+                else
+                {
+                    columns.Add(col);
+                }
+            }
+
+            Matrix<double> newMatrix = CreateMatrix.Sparse<double>(vertices.Count(), columns.Count());
+            for(int c = 0; c < columns.Count(); ++c)
+            {
+                newMatrix.SetColumn(c, columns[c]);
+            }
+        }
+
+        private void ToUndirected()
+        {/*
+            Matrix<double> newMatrix = CreateMatrix.Sparse<double>(0, 0);
+
+            for (int c = 0; c < this.matrix.ColumnCount; ++c)
+            {
+                Vector<double> col = this.matrix.Column(c);
+
+                int? tailIndex = null;
+                int? headIndex = null;
+                for (int r = 0; r < col.Count; r++)
+                {
+                    if (col[r] > 0)
+                    {
+                        tailIndex = r;
+                    }
+                    else if (col[r] < 0)
+                    {
+                        headIndex = r;
+                    }
+                }
+
+                // edge isnt a loop
+                if (headIndex != null) ;
+            }
+            */
         }
     }
 }

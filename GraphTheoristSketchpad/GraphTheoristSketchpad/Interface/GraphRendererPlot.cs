@@ -159,6 +159,8 @@ namespace GraphTheoristSketchpad.Interface
 
                         // Draw the arc on the canvas
                         rp.Canvas.DrawPath(path, edgePaint);
+
+                        rp.Canvas.DrawCircle(end.X, end.Y, 30, edgePaint);
                     }
                 }
             }

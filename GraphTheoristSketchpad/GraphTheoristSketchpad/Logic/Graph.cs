@@ -11,10 +11,26 @@ namespace GraphTheoristSketchpad.Logic
 
         public ISet<Vertex> Vertices { get; } = new HashSet<Vertex>();
 
+        public bool IsDirected
+        {
+            get
+            {
+                return isDirected;
+            }
+
+            set
+            {
+                this.matrix.IsDirected = value;
+            }
+        }
+
+        private bool isDirected;
+
         private IncidenceMatrix matrix;
 
         public Graph()
         {
+            isDirected = false;
             matrix = new IncidenceMatrix();
         }
 
