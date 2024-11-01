@@ -306,10 +306,16 @@ namespace GraphTheoristSketchpad
         private void btnToggleDirected_Checked(object sender, RoutedEventArgs e)
         {
             // Convert to a directed graph
+            graphRendererPlot.graph.IsDirected = true;
+            UpdateGraphInfoUI(null, null!);
+            GraphView.Refresh();
         }
         private void btnToggleDirected_Unchecked(object sender, RoutedEventArgs e)
         {
             // Convert from directed to undirected
+            graphRendererPlot.graph.IsDirected = false;
+            UpdateGraphInfoUI(null, null!);
+            GraphView.Refresh();
         }
 
         private void FormsPlot1_MouseLeftButtonDown(object? sender, MouseEventArgs e)

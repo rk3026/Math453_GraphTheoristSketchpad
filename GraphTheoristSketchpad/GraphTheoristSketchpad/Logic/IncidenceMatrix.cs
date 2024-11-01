@@ -111,8 +111,10 @@ namespace GraphTheoristSketchpad.Logic
             // new matrix with new edge.
             Matrix<double> newMatrix = CreateMatrix.Sparse<double>(vertices.Count, matrix.ColumnCount+1);
             newMatrix.SetSubMatrix(0, 0, matrix);
+
+            // set tail weight last to overwrite negative head weight in case of a loop
+            newMatrix[headIndex, newMatrix.ColumnCount - 1] = this.isDirected ? -weight : weight;
             newMatrix[tailIndex, newMatrix.ColumnCount - 1] = weight;
-            newMatrix[headIndex, newMatrix.ColumnCount - 1] = weight;
             this.matrix = newMatrix;
         }
 
@@ -127,9 +129,11 @@ namespace GraphTheoristSketchpad.Logic
             int endIndex = vertices.IndexOf(end);
             Vector<double> startRow = this.matrix.Row(startIndex);
             Vector<double> endRow = this.matrix.Row(endIndex);
-            for (int i = 0; i<startRow.Count; i++)
+
+            // remove columns where both rows corresponding to vertices have nonzero weights
+            for (int i = startRow.Count-1; i >= 0; --i)
             {
-                if (startRow[i] > 0 && endRow[i] > 0)
+                if (startRow[i] != 0 && endRow[i] != 0)
                 {
                     this.matrix = this.matrix.RemoveColumn(i);
                     break;
@@ -150,7 +154,7 @@ namespace GraphTheoristSketchpad.Logic
             // Iterate through the columns (edges) and mark the ones connected to this vertex
             for (int col = 0; col < matrix.ColumnCount; col++)
             {
-                if (matrix[vertexIndex, col] > 0)
+                if (matrix[vertexIndex, col] != 0)
                 {
                     edgesToRemove.Add(col);
                 }
@@ -189,13 +193,16 @@ namespace GraphTheoristSketchpad.Logic
             {
                 Vector<double> column = this.matrix.Column(i);
 
-                if (column[row] > 0)
+                // found incident edge
+                if (column[row] != 0)
                 {
                     // row of the other endpoint for this edge
                     int endRow = row;
+
+                    //search for other endpoint
                     for(int j = 0; j < column.Count; ++j)
                     {
-                        if (column[j] > 0 && j != row)
+                        if (column[j] != 0 && j != row)
                         {
                             endRow = j;
                             break;
@@ -275,7 +282,7 @@ namespace GraphTheoristSketchpad.Logic
                 {
                     if (col[r] != 0)
                     {
-                        if(tailIndex != null)
+                        if(tailIndex == null)
                             tailIndex = r;
                         else
                             headIndex = r;
@@ -306,11 +313,17 @@ namespace GraphTheoristSketchpad.Logic
             {
                 newMatrix.SetColumn(c, columns[c]);
             }
+
+            this.matrix = newMatrix;
         }
 
         private void ToUndirected()
-        {/*
-            Matrix<double> newMatrix = CreateMatrix.Sparse<double>(0, 0);
+        {
+            // count of each arc on each vertex
+            Dictionary<Vector<double>, int> arcCounts =
+                new Dictionary<Vector<double>, int>();
+
+            List<Vector<double>> columns = new List<Vector<double>>();
 
             for (int c = 0; c < this.matrix.ColumnCount; ++c)
             {
@@ -318,6 +331,8 @@ namespace GraphTheoristSketchpad.Logic
 
                 int? tailIndex = null;
                 int? headIndex = null;
+
+                // find tail and head indices of edge
                 for (int r = 0; r < col.Count; r++)
                 {
                     if (col[r] > 0)
@@ -331,9 +346,59 @@ namespace GraphTheoristSketchpad.Logic
                 }
 
                 // edge isnt a loop
-                if (headIndex != null) ;
+                if (headIndex != null)
+                {
+                    if(arcCounts.ContainsKey(col))
+                    {
+                        arcCounts[col] += 1;
+                    }
+                    else
+                    {
+                        arcCounts[col] = 1;
+                    }
+                }
+                else
+                {
+                    columns.Add(col);
+                }
             }
-            */
+
+
+            // combine opposite arcs into bidirectional edge
+            foreach(Vector<double> arc in arcCounts.Keys)
+            {
+                Vector<double> inverseArc = -arc;
+                if(arcCounts.ContainsKey(inverseArc))
+                {
+                    // replace negative weight (head) in column with positive one
+                    Vector<double> edge = arc.Clone();
+                    for(int i = 0; i < edge.Count; ++i)
+                    {
+                        if (edge[i] < 0)
+                        {
+                            edge[i] = double.Abs(edge[i]);
+                            break;
+                        }
+                    }
+
+                    // add bidirectional edge for each arc inverseArc pair
+                    for (int i = 0; i < int.Min(arcCounts[arc], arcCounts[inverseArc]); ++i)
+                    {
+                        columns.Add(edge);
+                    }
+
+                    arcCounts.Remove(arc);
+                    arcCounts.Remove(inverseArc);
+                }
+            }
+
+            Matrix<double> newMatrix = CreateMatrix.Sparse<double>(vertices.Count(), columns.Count());
+            for (int c = 0; c < columns.Count(); ++c)
+            {
+                newMatrix.SetColumn(c, columns[c]);
+            }
+
+            this.matrix = newMatrix;
         }
 
         public int getEdgeCount()
