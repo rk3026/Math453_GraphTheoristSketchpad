@@ -21,6 +21,7 @@ namespace GraphTheoristSketchpad.Logic
             set
             {
                 this.matrix.IsDirected = value;
+                isDirected = value;
             }
         }
 

@@ -48,6 +48,13 @@ namespace GraphTheoristSketchpad.Interface
 
         public void Render(RenderPack rp)
         {
+            DrawEdges(rp);
+            DrawVerticesAndLabels(rp);
+            DrawTemporaryLine(rp);
+        }
+
+        private void DrawEdges(RenderPack rp)
+        {
             FillStyle FillStyle = new();
             using SKPaint paint = new();
 
@@ -57,12 +64,12 @@ namespace GraphTheoristSketchpad.Interface
             Dictionary<CoordinateLine, int> sameEdges =
                 new Dictionary<CoordinateLine, int>();
 
-            foreach(CoordinateLine edge in edges)
+            foreach (CoordinateLine edge in edges)
             {
                 int edgeCount;
-                if(sameEdges.TryGetValue(edge, out edgeCount))
+                if (sameEdges.TryGetValue(edge, out edgeCount))
                 {
-                    sameEdges[edge] = edgeCount+1;
+                    sameEdges[edge] = edgeCount + 1;
                 }
                 else
                 {
@@ -159,7 +166,7 @@ namespace GraphTheoristSketchpad.Interface
 
                         // Calculate control point for the quadratic Bezier curve
                         // Offset for each parallel edge to spread the arcs apart
-                        float offset = (i + ((sameEdges[edge] + 1) % 2)) / 2 * (-2 * (i % 2) + 1) * 40 - 20* (-2 * (i % 2) + 1)*((sameEdges[edge] + 1) % 2);
+                        float offset = (i + ((sameEdges[edge] + 1) % 2)) / 2 * (-2 * (i % 2) + 1) * 40 - 20 * (-2 * (i % 2) + 1) * ((sameEdges[edge] + 1) % 2);
                         Pixel controlPoint = GetControlPointForArc(start, end, offset);
 
                         // Draw quadratic Bézier curve as an arc
@@ -170,11 +177,63 @@ namespace GraphTheoristSketchpad.Interface
                         // Draw the arc on the canvas
                         rp.Canvas.DrawPath(path, edgePaint);
 
-                        rp.Canvas.DrawCircle(end.X, end.Y, 30, edgePaint);
+                        if (this.graph.IsDirected)
+                        {
+                            //rp.Canvas.DrawCircle(end.X, end.Y, 30, edgePaint);
+                            DrawArrowOnLine(rp, pixelEdge, offset/2);
+                        }
                     }
                 }
             }
+        }
 
+        private void DrawArrowOnLine(RenderPack rp, PixelLine pixelEdge, float offset)
+        {
+            // Calculate the midpoint between the two vertices
+            Pixel start = pixelEdge.Pixel1;
+            Pixel end = pixelEdge.Pixel2;
+            float midX = (start.X + end.X) / 2;
+            float midY = (start.Y + end.Y) / 2;
+
+            // Calculate the direction of the line
+            float dx = end.X - start.X;
+            float dy = end.Y - start.Y;
+
+            // Normalize the direction vector to get the unit vector for the line
+            float length = (float)Math.Sqrt(dx * dx + dy * dy);
+            float ux = dx / length;
+            float uy = dy / length;
+
+            // Calculate the perpendicular unit vector for the offset
+            float perpUx = -uy;
+            float perpUy = ux;
+
+            // Apply the offset along the perpendicular direction
+            midX += perpUx * offset;
+            midY += perpUy * offset;
+
+            // Calculate the angle of the line
+            float angle = (float)Math.Atan2(dy, dx);
+
+            // Length of the arrowhead lines
+            float arrowLength = 10f;
+            float arrowAngle = 30f * (float)(Math.PI / 180);
+
+            // Calculate the points for the two sides of the arrowhead
+            float x1 = midX - arrowLength * (float)Math.Cos(angle - arrowAngle);
+            float y1 = midY - arrowLength * (float)Math.Sin(angle - arrowAngle);
+            float x2 = midX - arrowLength * (float)Math.Cos(angle + arrowAngle);
+            float y2 = midY - arrowLength * (float)Math.Sin(angle + arrowAngle);
+
+            // Draw the arrowhead lines on the canvas
+            rp.Canvas.DrawLine(midX, midY, x1, y1, edgePaint);
+            rp.Canvas.DrawLine(midX, midY, x2, y2, edgePaint);
+        }
+
+
+        private void DrawVerticesAndLabels(RenderPack rp)
+        {
+            using SKPaint paint = new();
             // Draw vertices and their labels
             foreach (Vertex v in graph.Vertices)
             {
@@ -187,11 +246,14 @@ namespace GraphTheoristSketchpad.Interface
                 {
                     float textOffsetX = 10;
                     float textOffsetY = -10;
-                    
+
                     rp.Canvas.DrawText(vertexLabel, centerPixel.X + textOffsetX, centerPixel.Y + textOffsetY, textPaint);
                 }
             }
+        }
 
+        private void DrawTemporaryLine(RenderPack rp)
+        {
             // Draw temporary line (from selected vertex to current mouse position)
             if (temporaryLine != null)
             {
