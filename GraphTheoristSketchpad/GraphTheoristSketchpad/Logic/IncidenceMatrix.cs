@@ -8,6 +8,7 @@ using SkiaSharp;
 using MathNet.Numerics.LinearAlgebra;
 using ScottPlot;
 using System.Windows.Controls;
+using System.Data;
 
 namespace GraphTheoristSketchpad.Logic
 {
@@ -51,41 +52,40 @@ namespace GraphTheoristSketchpad.Logic
             matrix = CreateMatrix.Sparse<double>(0,0);
         }
 
-        public override string ToString()
+        public DataTable ToDataTable()
         {
-            StringBuilder sb = new StringBuilder();
+            DataTable table = new DataTable();
 
-            // Calculate padding based on longest vertex label
-            int maxLabelWidth = 0;
-            if (vertices.Count > 0 )
+            // Add a column for vertex names as the first column
+            table.Columns.Add("Vertex", typeof(string));
+
+            // Add columns for each edge, named "Edge 1", "Edge 2", etc.
+            for (int col = 0; col < matrix.ColumnCount; col++)
             {
-                maxLabelWidth = vertices.Max(v => v.Label.Length);
+                table.Columns.Add($"Edge {col + 1}", typeof(double));
             }
-            int padding = maxLabelWidth + 1; // Extra space for readability
 
-            // Add column headers with padding
-            sb.Append(' ', padding); // Space for row headers
-            for (int j = 0; j < this.matrix.ColumnCount; j++)
+            // Add rows for each vertex, named by the vertex label
+            for (int row = 0; row < matrix.RowCount; row++)
             {
-                sb.Append($"e{j + 1}".PadRight(4)); // e1, e2, etc., with padding
-            }
-            sb.AppendLine();
+                DataRow dataRow = table.NewRow();
 
-            // Add rows with row headers
-            for (int i = 0; i < this.matrix.RowCount; i++)
-            {
-                sb.Append(vertices[i].Label.PadRight(padding)); // Row header with padding
-                Vector<double> row = this.matrix.Row(i);
+                // Set the vertex label as the first column
+                dataRow["Vertex"] = vertices[row].Label;
 
-                for (int j = 0; j < row.Count; j++)
+                // Populate each cell in the row with the matrix value
+                for (int col = 0; col < matrix.ColumnCount; col++)
                 {
-                    sb.Append($"{row[j],4} "); // Align matrix values with padding
+                    dataRow[col + 1] = matrix[row, col]; // Adjust index to skip the vertex column
                 }
-                sb.AppendLine();
+
+                // Add the populated row to the DataTable
+                table.Rows.Add(dataRow);
             }
 
-            return sb.ToString();
+            return table;
         }
+
 
 
 

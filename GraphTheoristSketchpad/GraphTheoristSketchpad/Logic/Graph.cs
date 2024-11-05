@@ -1,5 +1,6 @@
 ﻿using ScottPlot;
 using System.Collections;
+using System.Data;
 using System.Windows.Input;
 
 namespace GraphTheoristSketchpad.Logic
@@ -15,24 +16,21 @@ namespace GraphTheoristSketchpad.Logic
         {
             get
             {
-                return isDirected;
+                return this.matrix.IsDirected;
             }
 
             set
             {
                 this.matrix.IsDirected = value;
-                isDirected = value;
             }
         }
-
-        private bool isDirected;
 
         private IncidenceMatrix matrix;
 
         public Graph()
         {
-            isDirected = false;
             matrix = new IncidenceMatrix();
+            this.IsDirected = false;
         }
 
         // Method to raise the GraphChanged event
@@ -54,9 +52,9 @@ namespace GraphTheoristSketchpad.Logic
             return true;
         }
 
-        public string GetIncidenceMatrix()
+        public DataTable GetIncidenceMatrixTable()
         {
-            return matrix.ToString();
+            return matrix.ToDataTable();
         }
 
         public Vertex? getNearestVertex(Coordinates location, double maxDistance = 15)
