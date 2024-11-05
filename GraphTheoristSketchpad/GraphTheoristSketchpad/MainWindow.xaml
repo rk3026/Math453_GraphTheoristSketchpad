@@ -114,6 +114,9 @@
                         <TextBox Name="EdgeCountTextbox" IsReadOnly="True"/>
                         <Label Content="Number of Components: "/>
                         <TextBox Name="ComponentCountTextbox" IsReadOnly="True"/>
+                        <ToggleButton Content="Is Bipartite?"
+                          IsChecked="{Binding IsBipartite}"
+                          IsHitTestVisible="False" />
                         <TextBlock Text="Additional graph details or metrics can go here." TextWrapping="Wrap"/>
                     </StackPanel>
                 </ScrollViewer>
