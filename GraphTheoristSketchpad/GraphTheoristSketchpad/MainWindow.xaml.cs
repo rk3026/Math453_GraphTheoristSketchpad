@@ -73,7 +73,7 @@ namespace GraphTheoristSketchpad
         {
             VertexCountTextbox.Text = this.graphRendererPlot.graph.Vertices.Count.ToString();
             EdgeCountTextbox.Text = this.graphRendererPlot.graph.getEdgeCount().ToString();
-            IncidenceMatrixTextBox.Text = this.graphRendererPlot.graph.GetIncidenceMatrix();
+            IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
         }
 
         private void UpdateSelectionMarkers()
@@ -537,6 +537,16 @@ namespace GraphTheoristSketchpad
         private void MenuItem_About_Click(object sender, RoutedEventArgs e)
         {
             System.Windows.MessageBox.Show("About this application...", "About", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void DisplayBridgesLinksCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void DisplayVertexDegreeCheckbox_Checked(object sender, RoutedEventArgs e)
+        {
+
         }
 
         ////////////////////////// END OF TOOLBAR STUFF ///////////////////////////////////////////////////
