@@ -15,6 +15,8 @@ namespace GraphTheoristSketchpad
 {
     public partial class MainWindow : Window
     {
+        private bool isDraggingInfoPanel = false;
+        private Point clickPositionInfoPanel;
         enum ToolMode { 
             None, AddVertex, AddEdge, Erase, View, Edit
         }
@@ -68,6 +70,44 @@ namespace GraphTheoristSketchpad
 
             RectanglePlot = GraphView.Plot.Add.Rectangle(0, 0, 0, 0);
         }
+
+        private void Separator_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                isDraggingInfoPanel = true;
+                clickPositionInfoPanel = e.GetPosition(this);
+                Mouse.Capture((Border)sender);
+            }
+        }
+
+        private void Separator_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (isDraggingInfoPanel)
+            {
+                Point currentPosition = e.GetPosition(this);
+                double offset = clickPositionInfoPanel.X-currentPosition.X;
+
+                    // Resize the info panel
+                    double newWidth = InfoPanel.Width + offset;
+                    if (newWidth > 50) // Minimum width for the InfoPanel
+                    {
+                        InfoPanel.Width = newWidth;
+                    }
+
+                clickPositionInfoPanel = currentPosition;
+            }
+        }
+
+        private void Separator_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (isDraggingInfoPanel)
+            {
+                isDraggingInfoPanel = false;
+                Mouse.Capture(null);
+            }
+        }
+
 
         private void UpdateGraphInfoUI(object? sender, EventArgs e)
         {
