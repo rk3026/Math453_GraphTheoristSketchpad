@@ -16,20 +16,20 @@ namespace GraphTheoristSketchpad.Logic
         {
             get
             {
-                return this.matrix.IsDirected;
+                return this.incidenceMatrix.IsDirected;
             }
 
             set
             {
-                this.matrix.IsDirected = value;
+                this.incidenceMatrix.IsDirected = value;
             }
         }
 
-        private IncidenceMatrix matrix;
+        private IncidenceMatrix incidenceMatrix;
 
         public Graph()
         {
-            matrix = new IncidenceMatrix();
+            incidenceMatrix = new IncidenceMatrix();
             this.IsDirected = false;
         }
 
@@ -44,7 +44,7 @@ namespace GraphTheoristSketchpad.Logic
             if (!Vertices.Remove(v))
                 return false;
 
-            matrix.RemoveVertex(v);
+            incidenceMatrix.RemoveVertex(v);
 
             // Trigger the event when a vertex is removed
             OnGraphChanged();
@@ -54,7 +54,7 @@ namespace GraphTheoristSketchpad.Logic
 
         public DataTable GetIncidenceMatrixTable()
         {
-            return matrix.ToDataTable();
+            return incidenceMatrix.ToDataTable();
         }
 
         public Vertex? getNearestVertex(Coordinates location, double maxDistance = 15)
@@ -121,12 +121,12 @@ namespace GraphTheoristSketchpad.Logic
 
         public CoordinateLine[] getEdges()
         {
-            return matrix.getEdges();
+            return incidenceMatrix.getEdges();
         }
 
         public CoordinateLine[] getEdgesOn(Vertex v)
         {
-            return matrix.getEdgesOn(v);
+            return incidenceMatrix.getEdgesOn(v);
         }
 
         public bool Add(Vertex item)
@@ -141,7 +141,7 @@ namespace GraphTheoristSketchpad.Logic
 
         public bool AddEdge(Vertex start, Vertex end)
         {
-            matrix.AddEdge(start, end);
+            incidenceMatrix.AddEdge(start, end);
 
             // Trigger the event when an edge is added
             OnGraphChanged();
@@ -158,7 +158,7 @@ namespace GraphTheoristSketchpad.Logic
                 return false;
             }
 
-            matrix.RemoveEdge(start, end);
+            incidenceMatrix.RemoveEdge(start, end);
 
             // Trigger the event when an edge is removed
             OnGraphChanged();
@@ -218,7 +218,8 @@ namespace GraphTheoristSketchpad.Logic
 
         public void Clear()
         {
-            throw new NotImplementedException();
+            this.Vertices.Clear();
+            this.incidenceMatrix.Clear();
         }
 
         public bool Contains(Vertex item)
@@ -243,7 +244,7 @@ namespace GraphTheoristSketchpad.Logic
 
         public int getEdgeCount()
         {
-            return this.matrix.getEdgeCount();
+            return this.incidenceMatrix.getEdgeCount();
         }
     }
 }

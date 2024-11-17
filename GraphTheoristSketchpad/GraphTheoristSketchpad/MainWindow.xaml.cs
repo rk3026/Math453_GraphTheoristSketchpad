@@ -1,22 +1,15 @@
-﻿using ScottPlot.Plottables;
-using ScottPlot;
-using ScottPlot.WPF;
+﻿using ScottPlot;
 using System.Windows;
 using System.Windows.Input;
-using System.Collections;
 using GraphTheoristSketchpad.Interface;
 using System.Windows.Controls;
 using GraphTheoristSketchpad.Logic;
-using SkiaSharp;
-using System.Windows.Shapes;
-using Xceed.Wpf.Toolkit;
-using Microsoft.VisualBasic;
-using System.Windows.Media;
 
 namespace GraphTheoristSketchpad
 {
     public partial class MainWindow : Window
     {
+        private bool isGraphFramed = false;
         private bool isDraggingInfoPanel = false;
         private Point clickPositionInfoPanel;
         enum ToolMode { 
@@ -67,6 +60,8 @@ namespace GraphTheoristSketchpad
             axis.Left.MajorTickStyle.Length = 0;
             GraphView.Plot.Add.Plottable(graphRendererPlot);
             GraphView.Plot.Axes.SquareUnits();
+            GraphView.Plot.Axes.Frame(false);
+            GraphView.Plot.Axes.Title.IsVisible = false;
 
             // Subscribe to events:
             GraphView.MouseMove += FormsPlot1_MouseMove; // Separate so each mode has its own function.
@@ -78,6 +73,7 @@ namespace GraphTheoristSketchpad
             graphRendererPlot.graph.GraphChanged += UpdateGraphInfoUI;
 
             RectanglePlot = GraphView.Plot.Add.Rectangle(0, 0, 0, 0);
+            UpdateGraphInfoUI(null, null);
         }
 
         private void Separator_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -92,7 +88,7 @@ namespace GraphTheoristSketchpad
 
         private void Separator_MouseMove(object sender, MouseEventArgs e)
         {
-            graphRendererPlot.AutoScale();
+            graphRendererPlot.Refit();
             if (isDraggingInfoPanel)
             {
                 Point currentPosition = e.GetPosition(this);
@@ -121,8 +117,10 @@ namespace GraphTheoristSketchpad
 
         private void UpdateGraphInfoUI(object? sender, EventArgs e)
         {
-            VertexCountTextbox.Text = this.graphRendererPlot.graph.Vertices.Count.ToString();
-            EdgeCountTextbox.Text = this.graphRendererPlot.graph.getEdgeCount().ToString();
+            VertexCountLabel.Content = "Number of Vertices: " + this.graphRendererPlot.graph.Vertices.Count.ToString();
+            EdgeCountLabel.Content = "Number of Edges: " + this.graphRendererPlot.graph.getEdgeCount().ToString();
+            ComponentCountLabel.Content = "Number of Components: ";
+            BipartiteLabel.Content = "Is Bipartite?: ";
             IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
         }
 
@@ -597,6 +595,22 @@ namespace GraphTheoristSketchpad
         private void DisplayVertexDegreeCheckbox_Checked(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            graphRendererPlot.Clear();
+            UpdateGraphInfoUI(null, null);
+            GraphView.Refresh();
+        }
+
+        private void ToggleFramedGraphButton_Click(Object sender, RoutedEventArgs e)
+        {
+            this.isGraphFramed = !this.isGraphFramed;
+            this.GraphView.Plot.Axes.Frame(this.isGraphFramed);
+            this.GraphView.Plot.Axes.Title.IsVisible = this.isGraphFramed;
+            this.graphRendererPlot.Refit();
+            this.GraphView.Refresh();
         }
 
         ////////////////////////// END OF TOOLBAR STUFF ///////////////////////////////////////////////////

@@ -9,40 +9,6 @@ namespace GraphTheoristSketchpad.Interface
     {
         public Graph graph = new Graph();
         public CoordinateLine? temporaryLine = null;
-
-        // Custom Autoscale function, finds the size to fit all the vertices in.
-        public void AutoScale()
-        {
-            // Calculate graph boundaries based on vertices
-            if (graph.Vertices.Count == 0)
-                return; // No vertices to scale
-
-            double minX = double.MaxValue, minY = double.MaxValue;
-            double maxX = double.MinValue, maxY = double.MinValue;
-
-            foreach (Vertex vertex in graph.Vertices)
-            {
-                minX = Math.Min(minX, vertex.Location.X);
-                minY = Math.Min(minY, vertex.Location.Y);
-                maxX = Math.Max(maxX, vertex.Location.X);
-                maxY = Math.Max(maxY, vertex.Location.Y);
-            }
-
-            // Add some padding to make the plot look better
-            double padding = 0.1 * Math.Max(maxX - minX, maxY - minY);
-            minX -= padding;
-            minY -= padding;
-            maxX += padding;
-            maxY += padding;
-
-            // Set the axes spans
-            Axes.XAxis.Range.Set(minX, maxX);
-            Axes.YAxis.Range.Set(minY, maxY);
-            //Axes.SetSpanX(maxX - minX);
-            //Axes.SetSpanY(maxY - minY);
-        }
-
-
         IColormap Colormap { get; set; } = new ScottPlot.Colormaps.Turbo();
         // items required by IPlottable
         public bool IsVisible { get; set; } = true;
@@ -326,6 +292,45 @@ namespace GraphTheoristSketchpad.Interface
             }
 
             return vertices;
+        }
+
+        // Custom Autosfit function, finds the size to fit all the vertices in.
+        public void Refit()
+        {
+            // Calculate graph boundaries based on vertices
+            if (graph.Vertices.Count == 0)
+                return; // No vertices to scale
+
+            double minX = double.MaxValue, minY = double.MaxValue;
+            double maxX = double.MinValue, maxY = double.MinValue;
+
+            foreach (Vertex vertex in graph.Vertices)
+            {
+                minX = Math.Min(minX, vertex.Location.X);
+                minY = Math.Min(minY, vertex.Location.Y);
+                maxX = Math.Max(maxX, vertex.Location.X);
+                maxY = Math.Max(maxY, vertex.Location.Y);
+            }
+
+            // Add some padding to make the plot look better
+            double padding = 0.1 * Math.Max(maxX - minX, maxY - minY);
+            minX -= padding;
+            minY -= padding;
+            maxX += padding;
+            maxY += padding;
+
+            // Set the axes spans
+            Axes.XAxis.Range.Set(minX, maxX);
+            Axes.YAxis.Range.Set(minY, maxY);
+            //Axes.SetSpanX(maxX - minX);
+            //Axes.SetSpanY(maxY - minY);
+        }
+
+        public void Clear()
+        {
+            // Remove any temporary line
+            temporaryLine = null;
+            graph.Clear();
         }
     }
 }
