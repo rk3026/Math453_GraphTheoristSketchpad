@@ -10,6 +10,8 @@ using GraphTheoristSketchpad.Logic;
 using SkiaSharp;
 using System.Windows.Shapes;
 using Xceed.Wpf.Toolkit;
+using Microsoft.VisualBasic;
+using System.Windows.Media;
 
 namespace GraphTheoristSketchpad
 {
@@ -39,6 +41,8 @@ namespace GraphTheoristSketchpad
         public MainWindow()
         {
             InitializeComponent();
+
+            // Toolbar setup:
             toolbarButtons = new List<Button>
             {
                 btnAddVertex,
@@ -47,19 +51,24 @@ namespace GraphTheoristSketchpad
                 btnView,
                 btnEdit
             };
-            SetButtonSelected(btnView); // Select the view button
+            SetButtonSelected(btnView); // Select the view button as default
 
+            // Axis and visual setup:
+            GraphView.Plot.Axes.Title.Label.Text = "Graph";
             GraphView.Plot.Grid.IsVisible = false;
-
             AxisManager axis = GraphView.Plot.Axes;
-            axis.Left.IsVisible = false;
-            axis.Bottom.IsVisible = false;
-            axis.Right.IsVisible = false;
-            axis.Top.IsVisible = false;
-
+            axis.Left.TickLabelStyle.IsVisible = false;
+            axis.Bottom.TickLabelStyle.IsVisible = false;
+            axis.Right.TickLabelStyle.IsVisible = false;
+            axis.Top.TickLabelStyle.IsVisible = false;
+            axis.Bottom.MinorTickStyle.Length = 0;
+            axis.Bottom.MajorTickStyle.Length = 0;
+            axis.Left.MinorTickStyle.Length = 0;
+            axis.Left.MajorTickStyle.Length = 0;
             GraphView.Plot.Add.Plottable(graphRendererPlot);
             GraphView.Plot.Axes.SquareUnits();
 
+            // Subscribe to events:
             GraphView.MouseMove += FormsPlot1_MouseMove; // Separate so each mode has its own function.
             GraphView.MouseDown += FormsPlot1_MouseDown;
             GraphView.MouseUp += FormsPlot1_MouseUp;
@@ -83,6 +92,7 @@ namespace GraphTheoristSketchpad
 
         private void Separator_MouseMove(object sender, MouseEventArgs e)
         {
+            graphRendererPlot.AutoScale();
             if (isDraggingInfoPanel)
             {
                 Point currentPosition = e.GetPosition(this);
@@ -127,8 +137,8 @@ namespace GraphTheoristSketchpad
                 var newMarker = GraphView.Plot.Add.Marker(vertex.Location);
                 newMarker.MarkerStyle.Shape = MarkerShape.FilledCircle;
                 newMarker.MarkerStyle.Size = 30;
-                newMarker.MarkerStyle.FillColor = Colors.Blue.WithOpacity(0.4); // Selected color
-                newMarker.MarkerStyle.LineColor = Colors.Blue; // Outline color
+                newMarker.MarkerStyle.FillColor = ScottPlot.Colors.Blue.WithOpacity(0.4); // Selected color
+                newMarker.MarkerStyle.LineColor = ScottPlot.Colors.Blue; // Outline color
                 newMarker.MarkerStyle.LineWidth = 1;
             }
             GraphView.Refresh(); // Refresh to display the updated visuals
@@ -149,7 +159,6 @@ namespace GraphTheoristSketchpad
                 return;
             }
             MouseIsDown = true;
-            RectanglePlot.IsVisible = true;
             if (CurrentlyLeftClickedVertex != null)
             {
                 return;
@@ -520,6 +529,7 @@ namespace GraphTheoristSketchpad
                     selectedVertices.Clear();
                     return;
                 }
+                RectanglePlot.IsVisible = true;
                 Coordinates delta = new Coordinates(mouseLocation.X - LastMouseLocation.X, mouseLocation.Y - LastMouseLocation.Y);
                 foreach (Vertex v in selectedVertices)
                 {
@@ -540,7 +550,7 @@ namespace GraphTheoristSketchpad
         {
             Graph g = graphRendererPlot.graph;
             Vertex newVertex = new Vertex(x, y);
-            newVertex.Style.FillColor = new Color(5, 5, 50, 255);
+            newVertex.Style.FillColor = new ScottPlot.Color(5, 5, 50, 255);
             newVertex.Label = "v" + g.Vertices.Count.ToString();
             g.Add(newVertex);
         }

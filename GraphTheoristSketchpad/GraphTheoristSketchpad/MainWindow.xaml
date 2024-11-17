@@ -80,7 +80,10 @@
             </Grid.ColumnDefinitions>
 
             <!-- Graph Area -->
-            <ScottPlot:WpfPlot x:Name="GraphView" Margin="5" Grid.Column="0" />
+            <!-- Graph Area -->
+            <Border BorderBrush="Black" BorderThickness="2" CornerRadius="5" Margin="5" Grid.Column="0">
+                <ScottPlot:WpfPlot x:Name="GraphView" Margin="5" />
+            </Border>
 
             <!-- Popup for Color Picker -->
             <Popup x:Name="ColorPickerPopup" Placement="Mouse" StaysOpen="False">
