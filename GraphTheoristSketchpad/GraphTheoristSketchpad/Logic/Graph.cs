@@ -246,5 +246,97 @@ namespace GraphTheoristSketchpad.Logic
         {
             return this.incidenceMatrix.getEdgeCount();
         }
+
+        public int GetComponentCount()
+        {
+            HashSet<Vertex> visited = new HashSet<Vertex>();
+            int componentCount = 0;
+
+            foreach (var vertex in Vertices)
+            {
+                if (!visited.Contains(vertex))
+                {
+                    DFS(vertex, visited);
+                    componentCount++;
+                }
+            }
+
+            return componentCount;
+        }
+
+        private void DFS(Vertex vertex, HashSet<Vertex> visited)
+        {
+            visited.Add(vertex);
+
+            foreach (var edge in getEdgesOn(vertex))
+            {
+                Vertex? neighbor = GetOtherVertex(edge, vertex);
+                if (neighbor != null && !visited.Contains(neighbor))
+                {
+                    DFS(neighbor, visited);
+                }
+            }
+        }
+
+        private Vertex? GetOtherVertex(CoordinateLine edge, Vertex vertex)
+        {
+            // Assuming CoordinateLine.Start and CoordinateLine.End give the coordinates of the edge's endpoints
+            if (vertex.Location.Equals(edge.Start))
+            {
+                return Vertices.FirstOrDefault(v => v.Location.Equals(edge.End));
+            }
+            else if (vertex.Location.Equals(edge.End))
+            {
+                return Vertices.FirstOrDefault(v => v.Location.Equals(edge.Start));
+            }
+
+            return null;
+        }
+
+        public bool IsBridge(CoordinateLine edge)
+        {
+            // Get the current count of connected components
+            int originalComponentCount = GetComponentCount();
+
+            // Temporarily remove the edge
+            RemoveEdge(edge);
+
+            // Recalculate the number of connected components
+            int newComponentCount = GetComponentCount();
+
+            // Restore the edge
+            AddEdge(getNearestVertex(edge.Start), getNearestVertex(edge.End));
+
+            // If the component count increased, the edge is a bridge
+            return newComponentCount > originalComponentCount;
+        }
+
+        public List<CoordinateLine> GetBridges()
+        {
+            List<CoordinateLine> bridges = new List<CoordinateLine>();
+
+            foreach (var edge in getEdges())
+            {
+                if (IsBridge(edge))
+                {
+                    bridges.Add(edge);
+                }
+            }
+
+            return bridges;
+        }
+
+        public int GetVertexDegree(Vertex v)
+        {
+            if (!Vertices.Contains(v))
+                throw new ArgumentException("The vertex does not exist in the graph.");
+
+            // Get all edges connected to the vertex
+            CoordinateLine[] edges = getEdgesOn(v);
+
+            // Return the count of those edges as the degree of the vertex
+            return edges.Length;
+        }
+
     }
 }

@@ -121,6 +121,7 @@ namespace GraphTheoristSketchpad
             EdgeCountLabel.Content = "Number of Edges: " + this.graphRendererPlot.graph.getEdgeCount().ToString();
             ComponentCountLabel.Content = "Number of Components: ";
             BipartiteLabel.Content = "Is Bipartite?: ";
+            ComponentCountLabel.Content = "Number of Components: " + graphRendererPlot.graph.GetComponentCount().ToString();
             IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
         }
 
@@ -145,6 +146,7 @@ namespace GraphTheoristSketchpad
         // ONLY for the edit mode:
         private void FormsPlot1_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.RightButton  == MouseButtonState.Pressed) { return; } // Don't care about right clicking, shouldn't remove selection.
 
             bool isShiftPressed = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
             if (currentMode != ToolMode.Edit) {
@@ -247,7 +249,14 @@ namespace GraphTheoristSketchpad
                         // Apply the selected color to the vertex
                         if (selectedColor.HasValue)
                         {
-                            changeVertexColor(selectedColor.Value, CurrentlyRightClickedVertex);
+                            foreach(Vertex v in selectedVertices)
+                            {
+                                changeVertexColor(selectedColor.Value, v);
+                            }
+                            if (selectedVertices.Count == 0)
+                            {
+                                changeVertexColor(selectedColor.Value, CurrentlyRightClickedVertex);
+                            }
                         }
                         graphView.Refresh();
                     };
@@ -271,11 +280,17 @@ namespace GraphTheoristSketchpad
         {
             if (e.Text == "\b")
             {
-                if (CurrentlyRightClickedVertex.Label.Length == 0)
+                foreach (Vertex v in selectedVertices)
                 {
-                    return;
+                    if (v.Label.Length > 0)
+                    {
+                        v.Label = v.Label.Substring(0, v.Label.Length - 1);
+                    }
                 }
-                CurrentlyRightClickedVertex.Label = CurrentlyRightClickedVertex.Label.Substring(0, CurrentlyRightClickedVertex.Label.Length - 1);
+                if (selectedVertices.Count == 0 && CurrentlyRightClickedVertex.Label.Length > 0)
+                {
+                    CurrentlyRightClickedVertex.Label = CurrentlyRightClickedVertex.Label.Substring(0, CurrentlyRightClickedVertex.Label.Length - 1);
+                }
             }
             else if (e.Text == "\r")
             {
@@ -283,7 +298,14 @@ namespace GraphTheoristSketchpad
             }
             else
             {
-                CurrentlyRightClickedVertex.Label += e.Text;
+                foreach (Vertex v in selectedVertices)
+                {
+                    v.Label += e.Text;
+                }
+                if (selectedVertices.Count == 0)
+                {
+                    CurrentlyRightClickedVertex.Label += e.Text;
+                }
             }
             UpdateGraphInfoUI(this, new EventArgs());
             GraphView.Refresh();
@@ -587,14 +609,16 @@ namespace GraphTheoristSketchpad
             System.Windows.MessageBox.Show("About this application...", "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void DisplayBridgesLinksCheckbox_Checked(object sender, RoutedEventArgs e)
+        private void DisplayBridgesLinksCheckbox_Click(object sender, RoutedEventArgs e)
         {
-
+            graphRendererPlot.IsDisplayingBridgesAndLinks = !graphRendererPlot.IsDisplayingBridgesAndLinks;
+            GraphView.Refresh();
         }
 
-        private void DisplayVertexDegreeCheckbox_Checked(object sender, RoutedEventArgs e)
+        private void DisplayVertexDegreeCheckbox_Click(object sender, RoutedEventArgs e)
         {
-
+            graphRendererPlot.IsDisplayingVertexDegree = !graphRendererPlot.IsDisplayingVertexDegree;
+            GraphView.Refresh();
         }
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
