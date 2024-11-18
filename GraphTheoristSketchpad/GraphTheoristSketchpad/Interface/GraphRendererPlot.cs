@@ -1,11 +1,6 @@
 ﻿using GraphTheoristSketchpad.Logic;
-using MathNet.Numerics.LinearAlgebra.Factorization;
 using ScottPlot;
-using ScottPlot.Plottables;
 using SkiaSharp;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Windows.Input;
 
 namespace GraphTheoristSketchpad.Interface
 {
@@ -14,36 +9,52 @@ namespace GraphTheoristSketchpad.Interface
     {
         public Graph graph = new Graph();
         public CoordinateLine? temporaryLine = null;
-        
         IColormap Colormap { get; set; } = new ScottPlot.Colormaps.Turbo();
         // items required by IPlottable
         public bool IsVisible { get; set; } = true;
+        public bool IsDisplayingBridgesAndLinks { get; set; } = false;
+        public bool IsDisplayingVertexDegree { get; set; } = false;
         public IAxes Axes { get; set; } = new Axes();
         public IEnumerable<LegendItem> LegendItems => LegendItem.None;
         public AxisLimits GetAxisLimits() => AxisLimits.Default;
 
-        public SKPaint textPaint;
+        public SKPaint textPaint = new SKPaint
+        {
+            Color = SKColors.Black,
+            TextSize = 20,
+            IsAntialias = true,
+            Typeface = SKTypeface.FromFamilyName("Arial"),
+            BlendMode = SKBlendMode.Multiply
+        };
 
-        public SKPaint edgePaint;
+        public SKPaint edgePaint = new SKPaint
+        {
+            Color = SKColors.Red.WithAlpha(130),
+            IsAntialias = true,
+            StrokeWidth = 2,
+            Style = SKPaintStyle.Stroke,
+        };
+
+        public SKPaint bridgePaint = new SKPaint
+        {
+            Color = SKColors.Blue.WithAlpha(130),
+            IsAntialias = true,
+            StrokeWidth = 2,
+            Style = SKPaintStyle.Stroke,
+        };
+
+        public SKPaint degreeLabelPaint = new SKPaint
+        {
+            Color = SKColors.HotPink,
+            TextSize = 17,
+            IsAntialias = true,
+            StrokeCap = SKStrokeCap.Square,
+            Typeface = SKTypeface.FromFamilyName("Arial"),
+            Style = SKPaintStyle.StrokeAndFill,
+        };
 
         public GraphRendererPlot()
         {
-            textPaint = new SKPaint
-            {
-                Color = SKColors.Black,
-                TextSize = 20,
-                IsAntialias = true,
-                Typeface = SKTypeface.FromFamilyName("Arial"),
-                BlendMode = SKBlendMode.Multiply
-            };
-
-            edgePaint = new SKPaint
-            {
-                Color = SKColors.Red.WithAlpha(130),
-                IsAntialias = true,
-                StrokeWidth = 2,
-                Style = SKPaintStyle.Stroke,
-            };
         }
 
         public void Render(RenderPack rp)
@@ -56,18 +67,17 @@ namespace GraphTheoristSketchpad.Interface
         private void DrawEdges(RenderPack rp)
         {
             FillStyle FillStyle = new();
-            using SKPaint paint = new();
+            SKPaint edgeP = edgePaint;
+            SKPaint bridgeP = bridgePaint;
 
             // Get all edges
             CoordinateLine[] edges = graph.getEdges();
 
-            Dictionary<CoordinateLine, int> sameEdges =
-                new Dictionary<CoordinateLine, int>();
-
+            // Dictionary to store edges and their counts
+            Dictionary<CoordinateLine, int> sameEdges = new Dictionary<CoordinateLine, int>();
             foreach (CoordinateLine edge in edges)
             {
-                int edgeCount;
-                if (sameEdges.TryGetValue(edge, out edgeCount))
+                if (sameEdges.TryGetValue(edge, out int edgeCount))
                 {
                     sameEdges[edge] = edgeCount + 1;
                 }
@@ -77,23 +87,27 @@ namespace GraphTheoristSketchpad.Interface
                 }
             }
 
-            // draw edges
+            // Check if bridges should be displayed
+            HashSet<CoordinateLine> bridges = IsDisplayingBridgesAndLinks
+                ? new HashSet<CoordinateLine>(graph.GetBridges())
+                : new HashSet<CoordinateLine>();
+
+            // Draw edges
             foreach (CoordinateLine edge in sameEdges.Keys)
             {
                 PixelLine pixelEdge = Axes.GetPixelLine(edge);
 
-                // edge is loop
+                SKPaint currentPaint = bridges.Contains(edge) ? bridgeP : edgeP;
+
+                // Edge is a loop
                 if (edge.Start.Equals(edge.End))
                 {
-                    CoordinateLine[] incidentEdges =
-                        graph.getEdgesOn(graph.getNearestVertex(edge.Start)!);
+                    // Same logic as original for loops
+                    CoordinateLine[] incidentEdges = graph.getEdgesOn(graph.getNearestVertex(edge.Start)!);
 
-                    // get counter clockwise angle for each edge
-                    List<KeyValuePair<CoordinateLine, double>> edgeAngles =
-                        new List<KeyValuePair<CoordinateLine, double>>();
+                    List<KeyValuePair<CoordinateLine, double>> edgeAngles = new();
                     foreach (CoordinateLine incidentEdge in incidentEdges)
                     {
-                        // add if not loop
                         if (!incidentEdge.Equals(edge))
                         {
                             double deltaY = incidentEdge.End.Y - incidentEdge.Start.Y;
@@ -103,54 +117,39 @@ namespace GraphTheoristSketchpad.Interface
                         }
                     }
 
-                    // unit vector pointing to middle of largest angle
                     Pixel direction = new Pixel(1, 0);
-
-                    // find largest angle between edges
                     if (edgeAngles.Count != 0)
                     {
-                        // sort by angle
-                        edgeAngles.Sort((KeyValuePair<CoordinateLine, double> x, KeyValuePair<CoordinateLine, double> y) => { return x.Value < y.Value ? -1 : 1; });
+                        edgeAngles.Sort((x, y) => x.Value < y.Value ? -1 : 1);
 
-                        // counter clockwise angle of edge with largest angle
                         double largestEdgeAngle = edgeAngles.First().Value;
-
-                        // largest counter clockwise angle angle between two edges
                         double largestAngle = 0;
                         double lastAngle = edgeAngles.Last().Value - 2 * Math.PI;
 
-                        // find largest counter clockwise angle
                         foreach (KeyValuePair<CoordinateLine, double> edgeAngle in edgeAngles)
                         {
                             double angle = edgeAngle.Value - lastAngle;
-
                             if (angle > largestAngle)
                             {
                                 largestEdgeAngle = edgeAngle.Value;
                                 largestAngle = angle;
                             }
-
                             lastAngle = edgeAngle.Value;
                         }
 
                         double directionAngle = largestEdgeAngle - largestAngle / 2;
-
                         direction = new Pixel(Math.Cos(directionAngle), -Math.Sin(directionAngle));
                     }
 
-                    // draw loops
                     for (int i = 1; i <= sameEdges[edge]; ++i)
                     {
                         int radius = i * 10 + 10;
-                        rp.Canvas.DrawCircle(pixelEdge.X1 + direction.X * radius, pixelEdge.Y1 + direction.Y * radius, radius, edgePaint);
+                        rp.Canvas.DrawCircle(pixelEdge.X1 + direction.X * radius, pixelEdge.Y1 + direction.Y * radius, radius, currentPaint);
                     }
                 }
-                // edge is not loop
-                else
+                else // Edge is not a loop
                 {
                     CoordinateLine inverseEdge = new CoordinateLine(edge.End, edge.Start);
-
-                    // offset arcs going in one direction so they don't overlap one's going the other direction
                     int bendOffset = 0;
                     // total number of edges between two vertices
                     int totalEdgeCount = sameEdges[edge];
@@ -168,7 +167,6 @@ namespace GraphTheoristSketchpad.Interface
 
                     for (int i = 1 + bendOffset; i <= sameEdges[edge] + bendOffset; ++i)
                     {
-                        // Calculate the middle point between the two vertices
                         Pixel start = pixelEdge.Pixel1;
                         Pixel end = pixelEdge.Pixel2;
 
@@ -184,23 +182,21 @@ namespace GraphTheoristSketchpad.Interface
 
                         Pixel controlPoint = GetControlPointForArc(start, end, offset);
 
-                        // Draw quadratic Bézier curve as an arc
                         SKPath path = new SKPath();
                         path.MoveTo(start.X, start.Y);
                         path.QuadTo(controlPoint.X, controlPoint.Y, end.X, end.Y);
 
-                        // Draw the arc on the canvas
-                        rp.Canvas.DrawPath(path, edgePaint);
+                        rp.Canvas.DrawPath(path, currentPaint);
 
                         if (this.graph.IsDirected)
                         {
-                            //rp.Canvas.DrawCircle(end.X, end.Y, 30, edgePaint);
-                            DrawArrowOnLine(rp, pixelEdge, offset/2);
+                            DrawArrowOnLine(rp, pixelEdge, offset / 2);
                         }
                     }
                 }
             }
         }
+
 
         private void DrawArrowOnLine(RenderPack rp, PixelLine pixelEdge, float offset)
         {
@@ -264,6 +260,15 @@ namespace GraphTheoristSketchpad.Interface
 
                     rp.Canvas.DrawText(vertexLabel, centerPixel.X + textOffsetX, centerPixel.Y + textOffsetY, textPaint);
                 }
+
+                if (IsDisplayingVertexDegree)
+                {
+                    int degree = this.graph.GetVertexDegree(v);
+                    float textOffsetX = -10;
+                    float textOffsetY = -10;
+
+                    rp.Canvas.DrawText(degree.ToString(), centerPixel.X + textOffsetX, centerPixel.Y + textOffsetY, degreeLabelPaint);
+                }
             }
         }
 
@@ -313,6 +318,45 @@ namespace GraphTheoristSketchpad.Interface
             }
 
             return vertices;
+        }
+
+        // Custom Autosfit function, finds the size to fit all the vertices in.
+        public void Refit()
+        {
+            // Calculate graph boundaries based on vertices
+            if (graph.Vertices.Count == 0)
+                return; // No vertices to scale
+
+            double minX = double.MaxValue, minY = double.MaxValue;
+            double maxX = double.MinValue, maxY = double.MinValue;
+
+            foreach (Vertex vertex in graph.Vertices)
+            {
+                minX = Math.Min(minX, vertex.Location.X);
+                minY = Math.Min(minY, vertex.Location.Y);
+                maxX = Math.Max(maxX, vertex.Location.X);
+                maxY = Math.Max(maxY, vertex.Location.Y);
+            }
+
+            // Add some padding to make the plot look better
+            double padding = 0.1 * Math.Max(maxX - minX, maxY - minY);
+            minX -= padding;
+            minY -= padding;
+            maxX += padding;
+            maxY += padding;
+
+            // Set the axes spans
+            Axes.XAxis.Range.Set(minX, maxX);
+            Axes.YAxis.Range.Set(minY, maxY);
+            //Axes.SetSpanX(maxX - minX);
+            //Axes.SetSpanY(maxY - minY);
+        }
+
+        public void Clear()
+        {
+            // Remove any temporary line
+            temporaryLine = null;
+            graph.Clear();
         }
     }
 }

@@ -63,10 +63,12 @@
                 <Button Name="btnAddVertex" Content="Add Vertex" Click="btnAddVertex_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnAddEdge" Content="Add Edge" Click="btnAddEdge_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnErase" Content="Erase" Click="btnErase_Click" Style="{StaticResource ToolButtonStyle}" />
+                <Button x:Name="ClearButton" Content="Clear" Click="ClearButton_Click" Style="{StaticResource ToolButtonStyle}"/>
                 <Button Name="btnView" Content="View" Click="btnView_Click" Style="{StaticResource ToolButtonStyle}" />
                 <Button Name="btnEdit" Content="Edit" Click="btnEdit_Click" Style="{StaticResource ToolButtonStyle}" />
                 <ToggleButton Name="btnToggleDirected" Content="Directed" Checked="btnToggleDirected_Checked" Unchecked="btnToggleDirected_Unchecked" Style="{StaticResource ToolButtonStyleToggle}" />
                 <ToggleButton x:Name="ToggleInfoPanelButton" Content="Show Info" Click="ToggleInfoPanelButton_Click" Style="{StaticResource ToolButtonStyleToggle}" />
+                <ToggleButton x:Name="ToggleFramedGraphButton" Content="Show Frame" Click="ToggleFramedGraphButton_Click" Style="{StaticResource ToolButtonStyleToggle}"/>
             </ToolBar>
         </ToolBarTray>
 
@@ -80,7 +82,10 @@
             </Grid.ColumnDefinitions>
 
             <!-- Graph Area -->
-            <ScottPlot:WpfPlot x:Name="GraphView" Margin="5" Grid.Column="0" />
+            <!-- Graph Area -->
+            <Border BorderBrush="Black" BorderThickness="2" CornerRadius="5" Margin="5" Grid.Column="0">
+                <ScottPlot:WpfPlot x:Name="GraphView" Margin="5" />
+            </Border>
 
             <!-- Popup for Color Picker -->
             <Popup x:Name="ColorPickerPopup" Placement="Mouse" StaysOpen="False">
@@ -89,37 +94,41 @@
 
             <!-- Side Info Panel (collapsible) -->
             <Border x:Name="InfoPanel" Background="LightGray" Width="250" Grid.Column="1"
-        Visibility="{Binding IsChecked, ElementName=ToggleInfoPanelButton, Converter={StaticResource BoolToVisibilityConverter}}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel Margin="10">
-                        <!-- Graph Display Settings Checkboxes -->
-                        <TextBlock Text="Graph Display Settings" FontSize="16" FontWeight="Bold" Margin="0,10,0,5"/>
-                        <CheckBox x:Name="DisplayVertexDegreeCheckbox" Checked="DisplayVertexDegreeCheckbox_Checked" Content="Display Vertex Degree" Margin="0,5,0,0"/>
-                        <CheckBox x:Name="DisplayBridgesLinksCheckbox" Checked="DisplayBridgesLinksCheckbox_Checked"  Content="Display Bridges and Links" Margin="0,5,0,0"/>
-                        
-                        <Separator Margin="0,10,0,10"/>
+                    Visibility="{Binding IsChecked, ElementName=ToggleInfoPanelButton, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="5" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                        <TextBlock Text="Graph Information" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                        <Label Content="Incidence Matrix:" />
-                        <DataGrid x:Name="IncidenceMatrixDataGrid" Margin="0,5,0,0" 
-                          IsReadOnly="True" 
-                          AutoGenerateColumns="True" 
-                          HeadersVisibility="All" 
-                          HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Auto" 
-                          Background="LightGray"/>
-                        <Label Content="Number of Vertices: "/>
-                        <TextBox Name="VertexCountTextbox" IsReadOnly="True"/>
-                        <Label Content="Number of Edges: "/>
-                        <TextBox Name="EdgeCountTextbox" IsReadOnly="True"/>
-                        <Label Content="Number of Components: "/>
-                        <TextBox Name="ComponentCountTextbox" IsReadOnly="True"/>
-                        <ToggleButton Content="Is Bipartite?"
-                          IsChecked="{Binding IsBipartite}"
-                          IsHitTestVisible="False" />
-                        <TextBlock Text="Additional graph details or metrics can go here." TextWrapping="Wrap"/>
-                    </StackPanel>
-                </ScrollViewer>
+                    <!-- Separator for resizing -->
+                    <Border Background="DarkGray" Grid.Column="0" Cursor="SizeWE" MouseLeftButtonDown="Separator_MouseLeftButtonDown" MouseMove="Separator_MouseMove" MouseLeftButtonUp="Separator_MouseLeftButtonUp"/>
+
+                    <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Margin="10">
+                            <!-- Graph Display Settings Checkboxes -->
+                            <TextBlock Text="Graph Display Settings" FontSize="16" FontWeight="Bold" Margin="0,10,0,5"/>
+                            <CheckBox x:Name="DisplayVertexDegreeCheckbox" Click="DisplayVertexDegreeCheckbox_Click" Content="Display Vertex Degree" Margin="0,5,0,0"/>
+                            <CheckBox x:Name="DisplayBridgesLinksCheckbox" Click="DisplayBridgesLinksCheckbox_Click"  Content="Display Bridges and Links" Margin="0,5,0,0"/>
+
+                            <Separator Margin="0,10,0,10"/>
+                            <TextBlock Text="Graph Information" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
+                            <Label Content="Incidence Matrix:" />
+                            <DataGrid x:Name="IncidenceMatrixDataGrid" Margin="0,5,0,0" 
+                                      IsReadOnly="True" 
+                                      AutoGenerateColumns="True" 
+                                      HeadersVisibility="All" 
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollBarVisibility="Auto" 
+                                      Background="LightGray"/>
+                            <Label Name="VertexCountLabel" Content="Number of Vertices: "/>
+                            <Label Name="EdgeCountLabel" Content="Number of Edges: "/>
+                            <Label Name="ComponentCountLabel" Content="Number of Components: "/>
+                            <Label Name="BipartiteLabel" Content="Is Bipartite? "/>
+                            <TextBlock Text="Additional graph details or metrics can go here." TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
             </Border>
         </Grid>
     </DockPanel>

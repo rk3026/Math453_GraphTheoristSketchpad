@@ -1,20 +1,17 @@
-﻿using ScottPlot.Plottables;
-using ScottPlot;
-using ScottPlot.WPF;
+﻿using ScottPlot;
 using System.Windows;
 using System.Windows.Input;
-using System.Collections;
 using GraphTheoristSketchpad.Interface;
 using System.Windows.Controls;
 using GraphTheoristSketchpad.Logic;
-using SkiaSharp;
-using System.Windows.Shapes;
-using Xceed.Wpf.Toolkit;
 
 namespace GraphTheoristSketchpad
 {
     public partial class MainWindow : Window
     {
+        private bool isGraphFramed = false;
+        private bool isDraggingInfoPanel = false;
+        private Point clickPositionInfoPanel;
         enum ToolMode { 
             None, AddVertex, AddEdge, Erase, View, Edit
         }
@@ -37,6 +34,8 @@ namespace GraphTheoristSketchpad
         public MainWindow()
         {
             InitializeComponent();
+
+            // Toolbar setup:
             toolbarButtons = new List<Button>
             {
                 btnAddVertex,
@@ -45,19 +44,26 @@ namespace GraphTheoristSketchpad
                 btnView,
                 btnEdit
             };
-            SetButtonSelected(btnView); // Select the view button
+            SetButtonSelected(btnView); // Select the view button as default
 
+            // Axis and visual setup:
+            GraphView.Plot.Axes.Title.Label.Text = "Graph";
             GraphView.Plot.Grid.IsVisible = false;
-
             AxisManager axis = GraphView.Plot.Axes;
-            axis.Left.IsVisible = false;
-            axis.Bottom.IsVisible = false;
-            axis.Right.IsVisible = false;
-            axis.Top.IsVisible = false;
-
+            axis.Left.TickLabelStyle.IsVisible = false;
+            axis.Bottom.TickLabelStyle.IsVisible = false;
+            axis.Right.TickLabelStyle.IsVisible = false;
+            axis.Top.TickLabelStyle.IsVisible = false;
+            axis.Bottom.MinorTickStyle.Length = 0;
+            axis.Bottom.MajorTickStyle.Length = 0;
+            axis.Left.MinorTickStyle.Length = 0;
+            axis.Left.MajorTickStyle.Length = 0;
             GraphView.Plot.Add.Plottable(graphRendererPlot);
             GraphView.Plot.Axes.SquareUnits();
+            GraphView.Plot.Axes.Frame(false);
+            GraphView.Plot.Axes.Title.IsVisible = false;
 
+            // Subscribe to events:
             GraphView.MouseMove += FormsPlot1_MouseMove; // Separate so each mode has its own function.
             GraphView.MouseDown += FormsPlot1_MouseDown;
             GraphView.MouseUp += FormsPlot1_MouseUp;
@@ -67,12 +73,55 @@ namespace GraphTheoristSketchpad
             graphRendererPlot.graph.GraphChanged += UpdateGraphInfoUI;
 
             RectanglePlot = GraphView.Plot.Add.Rectangle(0, 0, 0, 0);
+            UpdateGraphInfoUI(null, null);
         }
+
+        private void Separator_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+            {
+                isDraggingInfoPanel = true;
+                clickPositionInfoPanel = e.GetPosition(this);
+                Mouse.Capture((Border)sender);
+            }
+        }
+
+        private void Separator_MouseMove(object sender, MouseEventArgs e)
+        {
+            graphRendererPlot.Refit();
+            if (isDraggingInfoPanel)
+            {
+                Point currentPosition = e.GetPosition(this);
+                double offset = clickPositionInfoPanel.X-currentPosition.X;
+
+                    // Resize the info panel
+                    double newWidth = InfoPanel.Width + offset;
+                    if (newWidth > 50) // Minimum width for the InfoPanel
+                    {
+                        InfoPanel.Width = newWidth;
+                    }
+
+                clickPositionInfoPanel = currentPosition;
+            }
+        }
+
+        private void Separator_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (isDraggingInfoPanel)
+            {
+                isDraggingInfoPanel = false;
+                Mouse.Capture(null);
+            }
+        }
+
 
         private void UpdateGraphInfoUI(object? sender, EventArgs e)
         {
-            VertexCountTextbox.Text = this.graphRendererPlot.graph.Vertices.Count.ToString();
-            EdgeCountTextbox.Text = this.graphRendererPlot.graph.getEdgeCount().ToString();
+            VertexCountLabel.Content = "Number of Vertices: " + this.graphRendererPlot.graph.Vertices.Count.ToString();
+            EdgeCountLabel.Content = "Number of Edges: " + this.graphRendererPlot.graph.getEdgeCount().ToString();
+            ComponentCountLabel.Content = "Number of Components: ";
+            BipartiteLabel.Content = "Is Bipartite?: ";
+            ComponentCountLabel.Content = "Number of Components: " + graphRendererPlot.graph.GetComponentCount().ToString();
             IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
         }
 
@@ -87,8 +136,8 @@ namespace GraphTheoristSketchpad
                 var newMarker = GraphView.Plot.Add.Marker(vertex.Location);
                 newMarker.MarkerStyle.Shape = MarkerShape.FilledCircle;
                 newMarker.MarkerStyle.Size = 30;
-                newMarker.MarkerStyle.FillColor = Colors.Blue.WithOpacity(0.4); // Selected color
-                newMarker.MarkerStyle.LineColor = Colors.Blue; // Outline color
+                newMarker.MarkerStyle.FillColor = ScottPlot.Colors.Blue.WithOpacity(0.4); // Selected color
+                newMarker.MarkerStyle.LineColor = ScottPlot.Colors.Blue; // Outline color
                 newMarker.MarkerStyle.LineWidth = 1;
             }
             GraphView.Refresh(); // Refresh to display the updated visuals
@@ -97,6 +146,7 @@ namespace GraphTheoristSketchpad
         // ONLY for the edit mode:
         private void FormsPlot1_MouseDown(object sender, MouseButtonEventArgs e)
         {
+            if (e.RightButton  == MouseButtonState.Pressed) { return; } // Don't care about right clicking, shouldn't remove selection.
 
             bool isShiftPressed = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
             if (currentMode != ToolMode.Edit) {
@@ -109,7 +159,6 @@ namespace GraphTheoristSketchpad
                 return;
             }
             MouseIsDown = true;
-            RectanglePlot.IsVisible = true;
             if (CurrentlyLeftClickedVertex != null)
             {
                 return;
@@ -200,7 +249,14 @@ namespace GraphTheoristSketchpad
                         // Apply the selected color to the vertex
                         if (selectedColor.HasValue)
                         {
-                            changeVertexColor(selectedColor.Value, CurrentlyRightClickedVertex);
+                            foreach(Vertex v in selectedVertices)
+                            {
+                                changeVertexColor(selectedColor.Value, v);
+                            }
+                            if (selectedVertices.Count == 0)
+                            {
+                                changeVertexColor(selectedColor.Value, CurrentlyRightClickedVertex);
+                            }
                         }
                         graphView.Refresh();
                     };
@@ -224,11 +280,17 @@ namespace GraphTheoristSketchpad
         {
             if (e.Text == "\b")
             {
-                if (CurrentlyRightClickedVertex.Label.Length == 0)
+                foreach (Vertex v in selectedVertices)
                 {
-                    return;
+                    if (v.Label.Length > 0)
+                    {
+                        v.Label = v.Label.Substring(0, v.Label.Length - 1);
+                    }
                 }
-                CurrentlyRightClickedVertex.Label = CurrentlyRightClickedVertex.Label.Substring(0, CurrentlyRightClickedVertex.Label.Length - 1);
+                if (selectedVertices.Count == 0 && CurrentlyRightClickedVertex.Label.Length > 0)
+                {
+                    CurrentlyRightClickedVertex.Label = CurrentlyRightClickedVertex.Label.Substring(0, CurrentlyRightClickedVertex.Label.Length - 1);
+                }
             }
             else if (e.Text == "\r")
             {
@@ -236,7 +298,14 @@ namespace GraphTheoristSketchpad
             }
             else
             {
-                CurrentlyRightClickedVertex.Label += e.Text;
+                foreach (Vertex v in selectedVertices)
+                {
+                    v.Label += e.Text;
+                }
+                if (selectedVertices.Count == 0)
+                {
+                    CurrentlyRightClickedVertex.Label += e.Text;
+                }
             }
             UpdateGraphInfoUI(this, new EventArgs());
             GraphView.Refresh();
@@ -480,6 +549,7 @@ namespace GraphTheoristSketchpad
                     selectedVertices.Clear();
                     return;
                 }
+                RectanglePlot.IsVisible = true;
                 Coordinates delta = new Coordinates(mouseLocation.X - LastMouseLocation.X, mouseLocation.Y - LastMouseLocation.Y);
                 foreach (Vertex v in selectedVertices)
                 {
@@ -500,7 +570,7 @@ namespace GraphTheoristSketchpad
         {
             Graph g = graphRendererPlot.graph;
             Vertex newVertex = new Vertex(x, y);
-            newVertex.Style.FillColor = new Color(5, 5, 50, 255);
+            newVertex.Style.FillColor = new ScottPlot.Color(5, 5, 50, 255);
             newVertex.Label = "v" + g.Vertices.Count.ToString();
             g.Add(newVertex);
         }
@@ -539,14 +609,32 @@ namespace GraphTheoristSketchpad
             System.Windows.MessageBox.Show("About this application...", "About", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
-        private void DisplayBridgesLinksCheckbox_Checked(object sender, RoutedEventArgs e)
+        private void DisplayBridgesLinksCheckbox_Click(object sender, RoutedEventArgs e)
         {
-
+            graphRendererPlot.IsDisplayingBridgesAndLinks = !graphRendererPlot.IsDisplayingBridgesAndLinks;
+            GraphView.Refresh();
         }
 
-        private void DisplayVertexDegreeCheckbox_Checked(object sender, RoutedEventArgs e)
+        private void DisplayVertexDegreeCheckbox_Click(object sender, RoutedEventArgs e)
         {
+            graphRendererPlot.IsDisplayingVertexDegree = !graphRendererPlot.IsDisplayingVertexDegree;
+            GraphView.Refresh();
+        }
 
+        private void ClearButton_Click(object sender, RoutedEventArgs e)
+        {
+            graphRendererPlot.Clear();
+            UpdateGraphInfoUI(null, null);
+            GraphView.Refresh();
+        }
+
+        private void ToggleFramedGraphButton_Click(Object sender, RoutedEventArgs e)
+        {
+            this.isGraphFramed = !this.isGraphFramed;
+            this.GraphView.Plot.Axes.Frame(this.isGraphFramed);
+            this.GraphView.Plot.Axes.Title.IsVisible = this.isGraphFramed;
+            this.graphRendererPlot.Refit();
+            this.GraphView.Refresh();
         }
 
         ////////////////////////// END OF TOOLBAR STUFF ///////////////////////////////////////////////////

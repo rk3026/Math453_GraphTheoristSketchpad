@@ -16,20 +16,20 @@ namespace GraphTheoristSketchpad.Logic
         {
             get
             {
-                return this.matrix.IsDirected;
+                return this.incidenceMatrix.IsDirected;
             }
 
             set
             {
-                this.matrix.IsDirected = value;
+                this.incidenceMatrix.IsDirected = value;
             }
         }
 
-        private IncidenceMatrix matrix;
+        private IncidenceMatrix incidenceMatrix;
 
         public Graph()
         {
-            matrix = new IncidenceMatrix();
+            incidenceMatrix = new IncidenceMatrix();
             this.IsDirected = false;
         }
 
@@ -44,7 +44,7 @@ namespace GraphTheoristSketchpad.Logic
             if (!Vertices.Remove(v))
                 return false;
 
-            matrix.RemoveVertex(v);
+            incidenceMatrix.RemoveVertex(v);
 
             // Trigger the event when a vertex is removed
             OnGraphChanged();
@@ -54,7 +54,7 @@ namespace GraphTheoristSketchpad.Logic
 
         public DataTable GetIncidenceMatrixTable()
         {
-            return matrix.ToDataTable();
+            return incidenceMatrix.ToDataTable();
         }
 
         public Vertex? getNearestVertex(Coordinates location, double maxDistance = 15)
@@ -121,12 +121,12 @@ namespace GraphTheoristSketchpad.Logic
 
         public CoordinateLine[] getEdges()
         {
-            return matrix.getEdges();
+            return incidenceMatrix.getEdges();
         }
 
         public CoordinateLine[] getEdgesOn(Vertex v)
         {
-            return matrix.getEdgesOn(v);
+            return incidenceMatrix.getEdgesOn(v);
         }
 
         public bool Add(Vertex item)
@@ -141,7 +141,7 @@ namespace GraphTheoristSketchpad.Logic
 
         public bool AddEdge(Vertex start, Vertex end)
         {
-            matrix.AddEdge(start, end);
+            incidenceMatrix.AddEdge(start, end);
 
             // Trigger the event when an edge is added
             OnGraphChanged();
@@ -158,7 +158,7 @@ namespace GraphTheoristSketchpad.Logic
                 return false;
             }
 
-            matrix.RemoveEdge(start, end);
+            incidenceMatrix.RemoveEdge(start, end);
 
             // Trigger the event when an edge is removed
             OnGraphChanged();
@@ -218,7 +218,8 @@ namespace GraphTheoristSketchpad.Logic
 
         public void Clear()
         {
-            throw new NotImplementedException();
+            this.Vertices.Clear();
+            this.incidenceMatrix.Clear();
         }
 
         public bool Contains(Vertex item)
@@ -243,7 +244,99 @@ namespace GraphTheoristSketchpad.Logic
 
         public int getEdgeCount()
         {
-            return this.matrix.getEdgeCount();
+            return this.incidenceMatrix.getEdgeCount();
         }
+
+        public int GetComponentCount()
+        {
+            HashSet<Vertex> visited = new HashSet<Vertex>();
+            int componentCount = 0;
+
+            foreach (var vertex in Vertices)
+            {
+                if (!visited.Contains(vertex))
+                {
+                    DFS(vertex, visited);
+                    componentCount++;
+                }
+            }
+
+            return componentCount;
+        }
+
+        private void DFS(Vertex vertex, HashSet<Vertex> visited)
+        {
+            visited.Add(vertex);
+
+            foreach (var edge in getEdgesOn(vertex))
+            {
+                Vertex? neighbor = GetOtherVertex(edge, vertex);
+                if (neighbor != null && !visited.Contains(neighbor))
+                {
+                    DFS(neighbor, visited);
+                }
+            }
+        }
+
+        private Vertex? GetOtherVertex(CoordinateLine edge, Vertex vertex)
+        {
+            // Assuming CoordinateLine.Start and CoordinateLine.End give the coordinates of the edge's endpoints
+            if (vertex.Location.Equals(edge.Start))
+            {
+                return Vertices.FirstOrDefault(v => v.Location.Equals(edge.End));
+            }
+            else if (vertex.Location.Equals(edge.End))
+            {
+                return Vertices.FirstOrDefault(v => v.Location.Equals(edge.Start));
+            }
+
+            return null;
+        }
+
+        public bool IsBridge(CoordinateLine edge)
+        {
+            // Get the current count of connected components
+            int originalComponentCount = GetComponentCount();
+
+            // Temporarily remove the edge
+            RemoveEdge(edge);
+
+            // Recalculate the number of connected components
+            int newComponentCount = GetComponentCount();
+
+            // Restore the edge
+            AddEdge(getNearestVertex(edge.Start), getNearestVertex(edge.End));
+
+            // If the component count increased, the edge is a bridge
+            return newComponentCount > originalComponentCount;
+        }
+
+        public List<CoordinateLine> GetBridges()
+        {
+            List<CoordinateLine> bridges = new List<CoordinateLine>();
+
+            foreach (var edge in getEdges())
+            {
+                if (IsBridge(edge))
+                {
+                    bridges.Add(edge);
+                }
+            }
+
+            return bridges;
+        }
+
+        public int GetVertexDegree(Vertex v)
+        {
+            if (!Vertices.Contains(v))
+                throw new ArgumentException("The vertex does not exist in the graph.");
+
+            // Get all edges connected to the vertex
+            CoordinateLine[] edges = getEdgesOn(v);
+
+            // Return the count of those edges as the degree of the vertex
+            return edges.Length;
+        }
+
     }
 }

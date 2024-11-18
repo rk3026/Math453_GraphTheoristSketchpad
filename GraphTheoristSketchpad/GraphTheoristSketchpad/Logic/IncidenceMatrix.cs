@@ -43,7 +43,7 @@ namespace GraphTheoristSketchpad.Logic
         // Vertex rows and edge columns for weighted graph.
         private Matrix<double> matrix;
 
-        // endpoints for all edges at the index present in the matrix rows
+        // endpoints for all edges at the index present in the incidenceMatrix rows
         private List<Vertex> vertices;
 
         public IncidenceMatrix()
@@ -73,7 +73,7 @@ namespace GraphTheoristSketchpad.Logic
                 // Set the vertex label as the first column
                 dataRow["Vertex"] = vertices[row].Label;
 
-                // Populate each cell in the row with the matrix value
+                // Populate each cell in the row with the incidenceMatrix value
                 for (int col = 0; col < matrix.ColumnCount; col++)
                 {
                     dataRow[col + 1] = matrix[row, col]; // Adjust index to skip the vertex column
@@ -89,7 +89,7 @@ namespace GraphTheoristSketchpad.Logic
 
 
 
-        // Adds a column to the matrix for this new edge.
+        // Adds a column to the incidenceMatrix for this new edge.
         // Also adds rows if endpoints are new vertices.
         public void AddEdge(Vertex tail, Vertex head, double weight)
         {
@@ -108,7 +108,7 @@ namespace GraphTheoristSketchpad.Logic
                 vertices.Add(head);
             }
 
-            // new matrix with new edge.
+            // new incidenceMatrix with new edge.
             Matrix<double> newMatrix = CreateMatrix.Sparse<double>(vertices.Count, matrix.ColumnCount+1);
             newMatrix.SetSubMatrix(0, 0, matrix);
 
@@ -160,7 +160,7 @@ namespace GraphTheoristSketchpad.Logic
                 }
             }
 
-            // Remove the edges from the matrix (start from last to avoid shifting)
+            // Remove the edges from the incidenceMatrix (start from last to avoid shifting)
             edgesToRemove.Reverse();
             foreach (int col in edgesToRemove)
             {
@@ -170,7 +170,7 @@ namespace GraphTheoristSketchpad.Logic
             // Remove the vertex from the vertex list
             vertices.RemoveAt(vertexIndex);
 
-            // Remove the vertex row from the matrix
+            // Remove the vertex row from the incidenceMatrix
             matrix = matrix.RemoveRow(vertexIndex);
         }
 
@@ -180,7 +180,7 @@ namespace GraphTheoristSketchpad.Logic
             // row of vertex v
             int row = vertices.IndexOf(v);
 
-            // return no edges when vertex not in matrix
+            // return no edges when vertex not in incidenceMatrix
             if(row == -1)
             {
                 return new CoordinateLine[0];
@@ -188,7 +188,7 @@ namespace GraphTheoristSketchpad.Logic
 
             List<CoordinateLine> incidentEdges = new List<CoordinateLine>();
 
-            // check if each edge (column) in matrix is incident on v
+            // check if each edge (column) in incidenceMatrix is incident on v
             for (int i = 0; i < this.matrix.ColumnCount; ++i)
             {
                 Vector<double> column = this.matrix.Column(i);
@@ -265,7 +265,7 @@ namespace GraphTheoristSketchpad.Logic
             return edges;
         }
 
-        // converts matrix to an incident matrix for a directed graph
+        // converts incidenceMatrix to an incident incidenceMatrix for a directed graph
         // edges become two parallel arcs directed oppositely.
         private void ToDirected()
         {
@@ -404,6 +404,12 @@ namespace GraphTheoristSketchpad.Logic
         public int getEdgeCount()
         {
             return this.matrix.ColumnCount;
+        }
+
+        public void Clear()
+        {
+            this.vertices.Clear();
+            this.matrix = CreateMatrix.Sparse<double>(0, 0);
         }
     }
 }
