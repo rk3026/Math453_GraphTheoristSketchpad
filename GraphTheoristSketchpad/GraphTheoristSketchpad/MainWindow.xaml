@@ -69,6 +69,7 @@
                 <ToggleButton Name="btnToggleDirected" Content="Directed" Checked="btnToggleDirected_Checked" Unchecked="btnToggleDirected_Unchecked" Style="{StaticResource ToolButtonStyleToggle}" />
                 <ToggleButton x:Name="ToggleInfoPanelButton" Content="Show Info" Click="ToggleInfoPanelButton_Click" Style="{StaticResource ToolButtonStyleToggle}" />
                 <ToggleButton x:Name="ToggleFramedGraphButton" Content="Show Frame" Click="ToggleFramedGraphButton_Click" Style="{StaticResource ToolButtonStyleToggle}"/>
+                <Button x:Name="RefitButton" Content="Refit" Click="RefitButton_Click" Style="{StaticResource ToolButtonStyle}"/>
             </ToolBar>
         </ToolBarTray>
 
@@ -82,10 +83,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- Graph Area -->
-            <!-- Graph Area -->
-            <Border BorderBrush="Black" BorderThickness="2" CornerRadius="5" Margin="5" Grid.Column="0">
-                <ScottPlot:WpfPlot x:Name="GraphView" Margin="5" />
-            </Border>
+            <ScottPlot:WpfPlot x:Name="GraphView" />
 
             <!-- Popup for Color Picker -->
             <Popup x:Name="ColorPickerPopup" Placement="Mouse" StaysOpen="False">
@@ -106,27 +104,81 @@
 
                     <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto">
                         <StackPanel Margin="10">
-                            <!-- Graph Display Settings Checkboxes -->
-                            <TextBlock Text="Graph Display Settings" FontSize="16" FontWeight="Bold" Margin="0,10,0,5"/>
-                            <CheckBox x:Name="DisplayVertexDegreeCheckbox" Click="DisplayVertexDegreeCheckbox_Click" Content="Display Vertex Degree" Margin="0,5,0,0"/>
-                            <CheckBox x:Name="DisplayBridgesLinksCheckbox" Click="DisplayBridgesLinksCheckbox_Click"  Content="Display Bridges and Links" Margin="0,5,0,0"/>
+                            <!-- Graph Display Settings -->
+                            <Expander IsExpanded="False">
+                                <Expander.Header>
+                                    <TextBlock Text="Graph Display Settings" FontWeight="Bold" />
+                                </Expander.Header>
+                                <StackPanel Margin="10,0,0,0">
+                                    <!-- Display Options -->
+                                    <CheckBox x:Name="DisplayVertexDegreeCheckbox" Click="DisplayVertexDegreeCheckbox_Click" Content="Display Vertex Degree" Margin="0,5,0,0"/>
+                                    <CheckBox x:Name="DisplayBridgesLinksCheckbox" Click="DisplayBridgesLinksCheckbox_Click" Content="Display Bridges and Links" Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </Expander>
+                            <Separator Margin="0,10,0,10"/>
+
+                            <!-- Graph Customization -->
+                            <Expander IsExpanded="False">
+                                <Expander.Header>
+                                    <TextBlock Text="Graph Customization" FontWeight="Bold" />
+                                </Expander.Header>
+                                <StackPanel Margin="10,0,0,0">
+                                    <!-- Graph Title -->
+                                    <TextBlock Text="Graph Title:" Margin="0,10,0,0"/>
+                                    <TextBox x:Name="GraphTitleTextbox" Width="100" Margin="0,5,0,0" Text="Graph" TextChanged="GraphTitleTextbox_TextChanged"/>
+                                    
+                                    <!-- Vertex Color -->
+                                    <TextBlock Text="Vertex Color:" Margin="0,5,0,0"/>
+                                    <xctk:ColorPicker x:Name="NewVertexColorPicker" Width="200" Height="30" SelectedColorChanged="NewVertexColorPicker_SelectedColorChanged"/>
+
+                                    <!-- Edge Color -->
+                                    <TextBlock Text="Edge Color:" Margin="0,5,0,0"/>
+                                    <xctk:ColorPicker x:Name="EdgeColorPicker" Width="200" Height="30" SelectedColorChanged="EdgeColorPicker_SelectedColorChanged"/>
+
+                                    <!-- Bridge Color -->
+                                    <TextBlock Text="Bridge Color:" Margin="0,5,0,0"/>
+                                    <xctk:ColorPicker x:Name="BridgeColorPicker" Width="200" Height="30" SelectedColorChanged="BridgeColorPicker_SelectedColorChanged"/>
+
+                                    <!-- Link Color -->
+                                    <TextBlock Text="Link Color:" Margin="0,5,0,0"/>
+                                    <xctk:ColorPicker x:Name="LinkColorPicker" Width="200" Height="30" SelectedColorChanged="LinkColorPicker_SelectedColorChanged"/>
+
+                                    <!-- Vertex Size -->
+                                    <TextBlock Text="Vertex Size:" Margin="0,10,0,0"/>
+                                    <TextBox x:Name="VertexSizeTextbox" Width="100" Margin="0,5,0,0" Text="10" PreviewTextInput="NumericOnlyInput"/>
+
+                                    <!-- Edge Width -->
+                                    <TextBlock Text="Edge Width:" Margin="0,10,0,0"/>
+                                    <TextBox x:Name="EdgeWidthTextbox" Width="100" Margin="0,5,0,0" Text="2" PreviewTextInput="NumericOnlyInput"/>
+                                </StackPanel>
+                            </Expander>
 
                             <Separator Margin="0,10,0,10"/>
-                            <TextBlock Text="Graph Information" FontSize="16" FontWeight="Bold" Margin="0,0,0,10"/>
-                            <Label Content="Incidence Matrix:" />
-                            <DataGrid x:Name="IncidenceMatrixDataGrid" Margin="0,5,0,0" 
-                                      IsReadOnly="True" 
-                                      AutoGenerateColumns="True" 
-                                      HeadersVisibility="All" 
-                                      HorizontalScrollBarVisibility="Auto"
-                                      VerticalScrollBarVisibility="Auto" 
-                                      Background="LightGray"/>
-                            <Label Name="VertexCountLabel" Content="Number of Vertices: "/>
-                            <Label Name="EdgeCountLabel" Content="Number of Edges: "/>
-                            <Label Name="ComponentCountLabel" Content="Number of Components: "/>
-                            <Label Name="BipartiteLabel" Content="Is Bipartite? "/>
-                            <TextBlock Text="Additional graph details or metrics can go here." TextWrapping="Wrap"/>
+
+                            <!-- Graph Information -->
+                            <Expander IsExpanded="True">
+                                <Expander.Header>
+                                    <TextBlock Text="Graph Information" FontWeight="Bold" />
+                                </Expander.Header>
+                                <StackPanel Margin="10,0,0,0">
+                                    <TextBlock Text="Incidence Matrix:" Margin="0,0,0,5"/>
+                                    <DataGrid x:Name="IncidenceMatrixDataGrid" Margin="0,0,0,5" 
+                      IsReadOnly="True" 
+                      AutoGenerateColumns="True" 
+                      HeadersVisibility="All" 
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto" 
+                      Background="LightGray"/>
+                                    <Label Name="VertexCountLabel" Content="0" Margin="0,0,0,5"/>
+                                    <Label Name="EdgeCountLabel" Content="0" Margin="0,0,0,5"/>
+                                    <Label Name="ComponentCountLabel" Content="0" Margin="0,0,0,5"/>
+                                    <Label Name="BipartiteLabel" Content="Unknown" Margin="0,0,0,5"/>
+                                    <TextBlock Text="Additional graph details or metrics can go here." TextWrapping="Wrap" Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </Expander>
                         </StackPanel>
+
+
                     </ScrollViewer>
                 </Grid>
             </Border>

@@ -13,7 +13,7 @@ namespace GraphTheoristSketchpad
         private bool isDraggingInfoPanel = false;
         private Point clickPositionInfoPanel;
         enum ToolMode { 
-            None, AddVertex, AddEdge, Erase, View, Edit
+            AddVertex, AddEdge, Erase, View, Edit
         }
         ToolMode currentMode = ToolMode.View;
         private List<Button> toolbarButtons;
@@ -60,8 +60,12 @@ namespace GraphTheoristSketchpad
             axis.Left.MajorTickStyle.Length = 0;
             GraphView.Plot.Add.Plottable(graphRendererPlot);
             GraphView.Plot.Axes.SquareUnits();
-            GraphView.Plot.Axes.Frame(false);
-            GraphView.Plot.Axes.Title.IsVisible = false;
+            //GraphView.Plot.Axes.Frameless(false);
+            this.GraphView.Plot.Axes.Title.IsVisible = this.isGraphFramed;
+            this.GraphView.Plot.Axes.Left.IsVisible = this.isGraphFramed;
+            this.GraphView.Plot.Axes.Bottom.IsVisible = this.isGraphFramed;
+            this.GraphView.Plot.Axes.Top.IsVisible = this.isGraphFramed;
+            this.GraphView.Plot.Axes.Right.IsVisible = this.isGraphFramed;
 
             // Subscribe to events:
             GraphView.MouseMove += FormsPlot1_MouseMove; // Separate so each mode has its own function.
@@ -88,7 +92,6 @@ namespace GraphTheoristSketchpad
 
         private void Separator_MouseMove(object sender, MouseEventArgs e)
         {
-            graphRendererPlot.Refit();
             if (isDraggingInfoPanel)
             {
                 Point currentPosition = e.GetPosition(this);
@@ -227,7 +230,6 @@ namespace GraphTheoristSketchpad
                     // Refresh the graph view
                     graphView.Refresh();
                 });
-
 
                 GraphView.Menu?.Add("Change Color", (graphView) =>
                 {
@@ -570,7 +572,7 @@ namespace GraphTheoristSketchpad
         {
             Graph g = graphRendererPlot.graph;
             Vertex newVertex = new Vertex(x, y);
-            newVertex.Style.FillColor = new ScottPlot.Color(5, 5, 50, 255);
+            newVertex.Style.FillColor = graphRendererPlot.NewVertexColor;
             newVertex.Label = "v" + g.Vertices.Count.ToString();
             g.Add(newVertex);
         }
@@ -631,10 +633,57 @@ namespace GraphTheoristSketchpad
         private void ToggleFramedGraphButton_Click(Object sender, RoutedEventArgs e)
         {
             this.isGraphFramed = !this.isGraphFramed;
-            this.GraphView.Plot.Axes.Frame(this.isGraphFramed);
+            // this.GraphView.Plot.Axes.Frameless(this.isGraphFramed);
             this.GraphView.Plot.Axes.Title.IsVisible = this.isGraphFramed;
-            this.graphRendererPlot.Refit();
+            this.GraphView.Plot.Axes.Left.IsVisible = this.isGraphFramed;
+            this.GraphView.Plot.Axes.Bottom.IsVisible = this.isGraphFramed;
+            this.GraphView.Plot.Axes.Top.IsVisible = this.isGraphFramed;
+            this.GraphView.Plot.Axes.Right.IsVisible = this.isGraphFramed;
             this.GraphView.Refresh();
+        }
+
+        private void RefitButton_Click(Object sender, RoutedEventArgs e)
+        {
+            graphRendererPlot.Refit();
+            this.GraphView.Refresh();
+        }
+
+
+        private void NumericOnlyInput(object sender, System.Windows.Input.TextCompositionEventArgs e)
+        {
+            e.Handled = !int.TryParse(e.Text, out _); // Allow only numeric input
+        }
+
+        private void NewVertexColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<System.Windows.Media.Color?> e)
+        {
+            ScottPlot.Color c = new ScottPlot.Color(e.NewValue.Value.R, e.NewValue.Value.G, e.NewValue.Value.B, e.NewValue.Value.A);
+            graphRendererPlot.NewVertexColor = c;
+            foreach (Vertex v in graphRendererPlot.graph.Vertices)
+            {
+                v.Style.FillColor = c;
+            }
+            GraphView.Refresh();
+        }
+
+        private void EdgeColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<System.Windows.Media.Color?> e)
+        {
+            // Update edge color logic
+        }
+
+        private void BridgeColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<System.Windows.Media.Color?> e)
+        {
+            // Update bridge color logic
+        }
+
+        private void LinkColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<System.Windows.Media.Color?> e)
+        {
+            // Update link color logic
+        }
+
+        private void GraphTitleTextbox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            GraphView.Plot.Axes.Title.Label.Text = GraphTitleTextbox.Text;
+            GraphView.Refresh();
         }
 
         ////////////////////////// END OF TOOLBAR STUFF ///////////////////////////////////////////////////

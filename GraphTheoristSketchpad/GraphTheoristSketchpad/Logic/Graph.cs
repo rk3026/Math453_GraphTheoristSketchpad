@@ -280,7 +280,6 @@ namespace GraphTheoristSketchpad.Logic
 
         private Vertex? GetOtherVertex(CoordinateLine edge, Vertex vertex)
         {
-            // Assuming CoordinateLine.Start and CoordinateLine.End give the coordinates of the edge's endpoints
             if (vertex.Location.Equals(edge.Start))
             {
                 return Vertices.FirstOrDefault(v => v.Location.Equals(edge.End));
