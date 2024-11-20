@@ -153,16 +153,35 @@ namespace GraphTheoristSketchpad.Interface
                 {
                     CoordinateLine inverseEdge = new CoordinateLine(edge.End, edge.Start);
                     int bendOffset = 0;
-                    if (sameEdges.TryGetValue(inverseEdge, out int inverseEdgeCount) && inverseEdge.Start.X < edge.Start.X)
+                    // total number of edges between two vertices
+                    int totalEdgeCount = sameEdges[edge];
+                    int inverseEdgeCount;
+                    if (sameEdges.TryGetValue(inverseEdge, out inverseEdgeCount))
                     {
-                        bendOffset = inverseEdgeCount;
+                        totalEdgeCount += inverseEdgeCount;
+
+                        // offset by number of inverse edges when inverse edges are drawn inbetween these edges.
+                        if (inverseEdge.Start.X < edge.Start.X)
+                        {
+                            bendOffset = inverseEdgeCount;
+                        }
                     }
 
                     for (int i = 1 + bendOffset; i <= sameEdges[edge] + bendOffset; ++i)
                     {
                         Pixel start = pixelEdge.Pixel1;
                         Pixel end = pixelEdge.Pixel2;
-                        float offset = (i + ((sameEdges[edge] + 1) % 2)) / 2 * (-2 * (i % 2) + 1) * 40 - 20 * (-2 * (i % 2) + 1) * ((sameEdges[edge] + 1) % 2);
+
+                        // Calculate control point for the quadratic Bezier curve
+                        // Offset for each parallel edge to spread the arcs apart
+                        float offset = (i + ((totalEdgeCount + 1) % 2)) / 2 * (-2 * (i % 2) + 1) * 40 - 20 * (-2 * (i % 2) + 1) * ((totalEdgeCount + 1) % 2);
+                        
+                        // flip offset to prevent inverted arc from flipping it.
+                        if(bendOffset != 0)
+                        {
+                            offset *= -1;
+                        }
+
                         Pixel controlPoint = GetControlPointForArc(start, end, offset);
 
                         SKPath path = new SKPath();
