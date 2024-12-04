@@ -17,6 +17,7 @@ namespace GraphTheoristSketchpad.Interface
         public IAxes Axes { get; set; } = new Axes();
         public IEnumerable<LegendItem> LegendItems => LegendItem.None;
         public AxisLimits GetAxisLimits() => AxisLimits.Default;
+        public ScottPlot.Color NewVertexColor { get; set; } = new ScottPlot.Color(5, 5, 50, 255);
 
         public SKPaint textPaint = new SKPaint
         {
@@ -45,7 +46,8 @@ namespace GraphTheoristSketchpad.Interface
 
         public SKPaint degreeLabelPaint = new SKPaint
         {
-            Color = SKColors.HotPink,
+            Color = SKColors.DarkGreen,
+            StrokeWidth = 1.5f,
             TextSize = 17,
             IsAntialias = true,
             StrokeCap = SKStrokeCap.Square,
@@ -244,14 +246,16 @@ namespace GraphTheoristSketchpad.Interface
 
         private void DrawVerticesAndLabels(RenderPack rp)
         {
-            using SKPaint paint = new();
+            SKPaint paint = new SKPaint();
             // Draw vertices and their labels
             foreach (Vertex v in graph.Vertices)
             {
+                // Draw the actual vertex:
                 Coordinates centerCoordinates = v.Location;
                 Pixel centerPixel = Axes.GetPixel(centerCoordinates);
                 Drawing.DrawMarker(rp.Canvas, paint, centerPixel, v.Style);
 
+                // Draw the vertex label:
                 string vertexLabel = v.Label;
                 if (!string.IsNullOrEmpty(vertexLabel))
                 {
@@ -261,6 +265,7 @@ namespace GraphTheoristSketchpad.Interface
                     rp.Canvas.DrawText(vertexLabel, centerPixel.X + textOffsetX, centerPixel.Y + textOffsetY, textPaint);
                 }
 
+                // Draw the degree label:
                 if (IsDisplayingVertexDegree)
                 {
                     int degree = this.graph.GetVertexDegree(v);
