@@ -142,7 +142,9 @@ namespace GraphTheoristSketchpad.Logic
                 for(int i = 0; i < k; ++i)
                 {
                     Dictionary<Vertex, int> localColoring = new Dictionary<Vertex, int>(coloring);
-                    localColoring[cVertex] = i;
+                    
+                    // try to maximize the number of colors used
+                    localColoring[cVertex] = (i+coloring.Count()) % k;
                     if(validColoring(k, ref localColoring, neighbors))
                     {
                         coloring = localColoring;
