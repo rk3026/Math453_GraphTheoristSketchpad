@@ -93,6 +93,17 @@ namespace GraphTheoristSketchpad.Logic
             }
         }
 
+        public int getChromaticNumber()
+        {
+            int k = 0;
+            while (true)
+            {
+                Dictionary<Vertex, int>? coloring = colorableBy(k);
+                if (coloring != null)
+                    return k;
+            }
+        }
+
         // returns true of the coloring is valid and completes the coloring if any vertices are missing.
         private Boolean validColoring(int k, Dictionary<Vertex, int> coloring, Dictionary<Vertex, ISet<Vertex>> neighbors)
         {
