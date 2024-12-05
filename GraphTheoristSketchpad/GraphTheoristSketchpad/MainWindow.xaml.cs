@@ -218,10 +218,12 @@ namespace GraphTheoristSketchpad
 
         private void FormsPlot1_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
+            // length of 15 pixels in coordinate units
+            double vectorSelectDist = Math.Abs(graphRendererPlot.Axes.GetCoordinateX(0) - graphRendererPlot.Axes.GetCoordinateX(15));
             double dpiScale = GetDpiScale();
             Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
-            Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
-            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
+            Coordinates mouseLocation = graphRendererPlot.Axes.GetCoordinates(mousePixel);
+            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, vectorSelectDist);
             //DataPoint nearest = graphRendererPlot.Data.GetNearest(mouseLocation, GraphView.Plot.LastRender);
 
             // Show context menu if right-clicked on a vertex
@@ -404,6 +406,8 @@ namespace GraphTheoristSketchpad
 
         private void FormsPlot1_MouseLeftButtonDown(object? sender, MouseEventArgs e)
         {
+            // length of 15 pixels in coordinate units
+            double vectorSelectDist = Math.Abs(graphRendererPlot.Axes.GetCoordinateX(0) - graphRendererPlot.Axes.GetCoordinateX(15));
             double dpiScale = GetDpiScale();
             Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
             Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
@@ -420,12 +424,12 @@ namespace GraphTheoristSketchpad
                     break;
 
                 case ToolMode.AddEdge:
-                    Vertex? firstVertexIncident = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
+                    Vertex? firstVertexIncident = graphRendererPlot.graph.getNearestVertex(mouseLocation, vectorSelectDist);
                     CurrentlyLeftClickedVertex = firstVertexIncident;
                     break;
 
                 case ToolMode.Edit:
-                    Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
+                    Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, vectorSelectDist);
                     if (nearestVertex != null)
                     {
                         if (isShiftPressed)
@@ -467,8 +471,10 @@ namespace GraphTheoristSketchpad
 
         private void DeleteVertexOrEdge(double x, double y)
         {
+            // length of 15 pixels in coordinate units
+            double vectorSelectDist = Math.Abs(graphRendererPlot.Axes.GetCoordinateX(0) - graphRendererPlot.Axes.GetCoordinateX(15));
             Coordinates location = new Coordinates(x, y);
-            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(location, 1);
+            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(location, vectorSelectDist);
             if (nearestVertex != null)
             {
                 graphRendererPlot.graph.RemoveVertex(nearestVertex);
@@ -484,6 +490,9 @@ namespace GraphTheoristSketchpad
 
         private void FormsPlot1_MouseLeftButtonUp(object? sender, MouseEventArgs e)
         {
+            // length of 15 pixels in coordinate units
+            double vectorSelectDist = Math.Abs(graphRendererPlot.Axes.GetCoordinateX(0) - graphRendererPlot.Axes.GetCoordinateX(15));
+
             graphRendererPlot.temporaryLine = null;
 
             // Dragging Vertices:
@@ -497,7 +506,7 @@ namespace GraphTheoristSketchpad
                 case ToolMode.AddVertex:
                     break;
                 case ToolMode.AddEdge:
-                    Vertex? secondVertexIncident = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
+                    Vertex? secondVertexIncident = graphRendererPlot.graph.getNearestVertex(mouseLocation, vectorSelectDist);
                     if (secondVertexIncident != null && CurrentlyLeftClickedVertex != null)
                     {
                         graphRendererPlot.graph.AddEdge(CurrentlyLeftClickedVertex, secondVertexIncident);
@@ -523,11 +532,14 @@ namespace GraphTheoristSketchpad
 
         private void FormsPlot1_MouseMove(object? sender, MouseEventArgs e)
         {
+            // length of 15 pixels in coordinate units
+            double vectorSelectDist = Math.Abs(graphRendererPlot.Axes.GetCoordinateX(0) - graphRendererPlot.Axes.GetCoordinateX(15));
+
             double dpiScale = GetDpiScale();
             Pixel mousePixel = new Pixel(e.GetPosition(GraphView).X * dpiScale, e.GetPosition(GraphView).Y * dpiScale);
 
             Coordinates mouseLocation = GraphView.Plot.GetCoordinates(mousePixel);
-            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, 1);
+            Vertex? nearestVertex = graphRendererPlot.graph.getNearestVertex(mouseLocation, vectorSelectDist);
 
             // Change cursor based on mode and nearest vertex
             if (currentMode != ToolMode.Erase)
