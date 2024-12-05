@@ -14,10 +14,11 @@ namespace GraphTheoristSketchpad.Interface
         public bool IsVisible { get; set; } = true;
         public bool IsDisplayingBridgesAndLinks { get; set; } = false;
         public bool IsDisplayingVertexDegree { get; set; } = false;
+        public bool IsDisplayingBipartiteSets { get; set; } = false;
         public IAxes Axes { get; set; } = new Axes();
         public IEnumerable<LegendItem> LegendItems => LegendItem.None;
         public AxisLimits GetAxisLimits() => AxisLimits.Default;
-        public ScottPlot.Color NewVertexColor { get; set; } = new ScottPlot.Color(5, 5, 50, 255);
+        public ScottPlot.Color DefaultVertexColor { get; set; } = new ScottPlot.Color(5, 5, 50, 255);
 
         public SKPaint textPaint = new SKPaint
         {
@@ -26,6 +27,12 @@ namespace GraphTheoristSketchpad.Interface
             IsAntialias = true,
             Typeface = SKTypeface.FromFamilyName("Arial"),
             BlendMode = SKBlendMode.Multiply
+        };
+
+        public SKPaint vertexPaint = new SKPaint
+        {
+            Color = SKColors.Black,
+            Style = SKPaintStyle.Stroke,
         };
 
         public SKPaint edgePaint = new SKPaint
@@ -39,6 +46,14 @@ namespace GraphTheoristSketchpad.Interface
         public SKPaint bridgePaint = new SKPaint
         {
             Color = SKColors.Blue.WithAlpha(130),
+            IsAntialias = true,
+            StrokeWidth = 2,
+            Style = SKPaintStyle.Stroke,
+        };
+
+        public SKPaint linkPaint = new SKPaint
+        {
+            Color = SKColors.Red.WithAlpha(130),
             IsAntialias = true,
             StrokeWidth = 2,
             Style = SKPaintStyle.Stroke,
@@ -70,6 +85,7 @@ namespace GraphTheoristSketchpad.Interface
         {
             FillStyle FillStyle = new();
             SKPaint edgeP = edgePaint;
+            SKPaint linkP = linkPaint;
             SKPaint bridgeP = bridgePaint;
 
             // Get all edges
@@ -99,7 +115,15 @@ namespace GraphTheoristSketchpad.Interface
             {
                 PixelLine pixelEdge = Axes.GetPixelLine(edge);
 
-                SKPaint currentPaint = bridges.Contains(edge) ? bridgeP : edgeP;
+                SKPaint currentPaint;
+                if (IsDisplayingBridgesAndLinks)
+                {
+                    currentPaint = bridges.Contains(edge) ? bridgeP : linkP;
+                }
+                else
+                {
+                    currentPaint = edgeP;
+                }
 
                 // Edge is a loop
                 if (edge.Start.Equals(edge.End))
@@ -199,7 +223,6 @@ namespace GraphTheoristSketchpad.Interface
             }
         }
 
-
         private void DrawArrowOnLine(RenderPack rp, PixelLine pixelEdge, float offset)
         {
             // Calculate the midpoint between the two vertices
@@ -246,14 +269,13 @@ namespace GraphTheoristSketchpad.Interface
 
         private void DrawVerticesAndLabels(RenderPack rp)
         {
-            SKPaint paint = new SKPaint();
             // Draw vertices and their labels
             foreach (Vertex v in graph.Vertices)
             {
                 // Draw the actual vertex:
                 Coordinates centerCoordinates = v.Location;
                 Pixel centerPixel = Axes.GetPixel(centerCoordinates);
-                Drawing.DrawMarker(rp.Canvas, paint, centerPixel, v.Style);
+                Drawing.DrawMarker(rp.Canvas, vertexPaint, centerPixel, v.Style);
 
                 // Draw the vertex label:
                 string vertexLabel = v.Label;

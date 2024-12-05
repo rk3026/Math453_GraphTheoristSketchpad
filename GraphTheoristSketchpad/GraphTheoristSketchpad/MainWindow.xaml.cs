@@ -4,6 +4,7 @@ using System.Windows.Input;
 using GraphTheoristSketchpad.Interface;
 using System.Windows.Controls;
 using GraphTheoristSketchpad.Logic;
+using SkiaSharp.Views.WPF;
 
 namespace GraphTheoristSketchpad
 {
@@ -34,6 +35,8 @@ namespace GraphTheoristSketchpad
         public MainWindow()
         {
             InitializeComponent();
+
+            InitializeColorPickers();
 
             // Toolbar setup:
             toolbarButtons = new List<Button>
@@ -78,6 +81,14 @@ namespace GraphTheoristSketchpad
 
             RectanglePlot = GraphView.Plot.Add.Rectangle(0, 0, 0, 0);
             UpdateGraphInfoUI(null, null);
+        }
+
+        private void InitializeColorPickers()
+        {
+            NewVertexColorPicker.SelectedColor = graphRendererPlot.vertexPaint.Color.ToColor();
+            EdgeColorPicker.SelectedColor = graphRendererPlot.edgePaint.Color.ToColor();
+            BridgeColorPicker.SelectedColor = graphRendererPlot.bridgePaint.Color.ToColor();
+            LinkColorPicker.SelectedColor = graphRendererPlot.linkPaint.Color.ToColor();
         }
 
         private void Separator_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -125,6 +136,7 @@ namespace GraphTheoristSketchpad
             ComponentCountLabel.Content = "Number of Components: ";
             BipartiteLabel.Content = "Is Bipartite?: ";
             ComponentCountLabel.Content = "Number of Components: " + graphRendererPlot.graph.GetComponentCount().ToString();
+            BipartiteLabel.Content = "Is Bipartite?: " + graphRendererPlot.graph.IsBipartite().ToString();
             IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
         }
 
@@ -584,7 +596,7 @@ namespace GraphTheoristSketchpad
         {
             Graph g = graphRendererPlot.graph;
             Vertex newVertex = new Vertex(x, y);
-            newVertex.Style.FillColor = graphRendererPlot.NewVertexColor;
+            newVertex.Style.FillColor = new ScottPlot.Color(graphRendererPlot.vertexPaint.Color.Red, graphRendererPlot.vertexPaint.Color.Green, graphRendererPlot.vertexPaint.Color.Blue, graphRendererPlot.vertexPaint.Color.Alpha);
             newVertex.Label = "v" + g.Vertices.Count.ToString();
             g.Add(newVertex);
         }
@@ -635,6 +647,12 @@ namespace GraphTheoristSketchpad
             GraphView.Refresh();
         }
 
+        public void DisplayBipartiteSetsCheckbox_Click(object sender, RoutedEventArgs e)
+        {
+            graphRendererPlot.IsDisplayingBipartiteSets = !graphRendererPlot.IsDisplayingBipartiteSets;
+            GraphView.Refresh();
+        }
+
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             graphRendererPlot.Clear();
@@ -668,28 +686,33 @@ namespace GraphTheoristSketchpad
 
         private void NewVertexColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<System.Windows.Media.Color?> e)
         {
-            ScottPlot.Color c = new ScottPlot.Color(e.NewValue.Value.R, e.NewValue.Value.G, e.NewValue.Value.B, e.NewValue.Value.A);
-            graphRendererPlot.NewVertexColor = c;
+            graphRendererPlot.vertexPaint.Color = new SkiaSharp.SKColor(e.NewValue.Value.R, e.NewValue.Value.G, e.NewValue.Value.B, e.NewValue.Value.A);
+
+            // Update each vertex's color on the graph (possibly remove this?)
             foreach (Vertex v in graphRendererPlot.graph.Vertices)
             {
-                v.Style.FillColor = c;
+                v.Style.FillColor = new ScottPlot.Color(graphRendererPlot.vertexPaint.Color.Red, graphRendererPlot.vertexPaint.Color.Green, graphRendererPlot.vertexPaint.Color.Blue, graphRendererPlot.vertexPaint.Color.Alpha);
             }
+
             GraphView.Refresh();
         }
 
         private void EdgeColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<System.Windows.Media.Color?> e)
         {
-            // Update edge color logic
+            graphRendererPlot.edgePaint.Color = new SkiaSharp.SKColor(e.NewValue.Value.R, e.NewValue.Value.G, e.NewValue.Value.B, e.NewValue.Value.A);
+            GraphView.Refresh();
         }
 
         private void BridgeColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<System.Windows.Media.Color?> e)
         {
-            // Update bridge color logic
+            graphRendererPlot.bridgePaint.Color = new SkiaSharp.SKColor(e.NewValue.Value.R, e.NewValue.Value.G, e.NewValue.Value.B, e.NewValue.Value.A);
+            GraphView.Refresh();
         }
 
         private void LinkColorPicker_SelectedColorChanged(object sender, RoutedPropertyChangedEventArgs<System.Windows.Media.Color?> e)
         {
-            // Update link color logic
+            graphRendererPlot.linkPaint.Color = new SkiaSharp.SKColor(e.NewValue.Value.R, e.NewValue.Value.G, e.NewValue.Value.B, e.NewValue.Value.A);
+            GraphView.Refresh();
         }
 
         private void GraphTitleTextbox_TextChanged(object sender, TextChangedEventArgs e)

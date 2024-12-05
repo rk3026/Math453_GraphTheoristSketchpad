@@ -363,6 +363,7 @@ namespace GraphTheoristSketchpad.Logic
             }
         }
 
+        // Gets the neighbor of a vertex from a specific edge and vertex. (helper function for DFS)
         private Vertex? GetOtherVertex(CoordinateLine edge, Vertex vertex)
         {
             if (vertex.Location.Equals(edge.Start))
@@ -377,7 +378,7 @@ namespace GraphTheoristSketchpad.Logic
             return null;
         }
 
-        public bool IsBridge(CoordinateLine edge)
+        private bool IsBridge(CoordinateLine edge)
         {
             // Get the current count of connected components
             int originalComponentCount = GetComponentCount();
@@ -421,6 +422,86 @@ namespace GraphTheoristSketchpad.Logic
             // Return the count of those edges as the degree of the vertex
             return edges.Length;
         }
+
+        // Helper function for determining if bipartite
+        private Dictionary<Vertex, int>? PerformBFSColoring()
+        {
+            // Dictionary to store the color of each vertex (-1: not colored, 0: color 0, 1: color 1)
+            Dictionary<Vertex, int> color = new Dictionary<Vertex, int>();
+            foreach (var vertex in Vertices)
+            {
+                color[vertex] = -1; // Initialize all vertices as not colored
+            }
+
+            // BFS to color the graph
+            foreach (var startVertex in Vertices)
+            {
+                if (color[startVertex] == -1) // Start BFS only if the vertex is not colored
+                {
+                    Queue<Vertex> queue = new Queue<Vertex>();
+                    queue.Enqueue(startVertex);
+                    color[startVertex] = 0; // Assign the first color
+
+                    while (queue.Count > 0)
+                    {
+                        Vertex current = queue.Dequeue();
+                        int currentColor = color[current];
+
+                        foreach (var edge in getEdgesOn(current))
+                        {
+                            Vertex? neighbor = GetOtherVertex(edge, current);
+                            if (neighbor != null)
+                            {
+                                if (color[neighbor] == -1)
+                                {
+                                    // Assign the opposite color to the neighbor
+                                    color[neighbor] = 1 - currentColor;
+                                    queue.Enqueue(neighbor);
+                                }
+                                else if (color[neighbor] == currentColor)
+                                {
+                                    // If the neighbor has the same color, the graph is not bipartite
+                                    return null; // indicates failure
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            return color; // Return the color mapping
+        }
+
+
+        public bool IsBipartite()
+        {
+            // Check if the BFS coloring returns a valid color mapping
+            return PerformBFSColoring() != null;
+        }
+
+        // Returns the two bipartite sets in a bipartite graph.
+        public List<HashSet<Vertex>> GetPartiteSets()
+        {
+            var colorMapping = PerformBFSColoring();
+
+            if (colorMapping == null)
+                return new List<HashSet<Vertex>>(); // Return empty list if the graph is not bipartite
+
+            // Separate vertices into two sets based on their colors
+            HashSet<Vertex> setA = new HashSet<Vertex>();
+            HashSet<Vertex> setB = new HashSet<Vertex>();
+
+            foreach (var pair in colorMapping)
+            {
+                if (pair.Value == 0)
+                    setA.Add(pair.Key);
+                else
+                    setB.Add(pair.Key);
+            }
+
+            return new List<HashSet<Vertex>> { setA, setB };
+        }
+
 
     }
 }
