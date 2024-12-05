@@ -217,6 +217,49 @@ namespace GraphTheoristSketchpad.Logic
             return incidentEdges.ToArray();
         }
 
+        // returns array of neighbors of v
+        public ISet<Vertex> getNeighborsOf(Vertex v)
+        {
+            // row of vertex v
+            int row = vertices.IndexOf(v);
+
+            // return no vertices when vertex not in incidenceMatrix
+            if (row == -1)
+            {
+                return new HashSet<Vertex>();
+            }
+
+            List<Vertex> neighbors = new List<Vertex>();
+
+            // check if each edge (column) in incidenceMatrix is incident on v
+            for (int i = 0; i < this.matrix.ColumnCount; ++i)
+            {
+                Vector<double> column = this.matrix.Column(i);
+
+                // found incident edge
+                if (column[row] != 0)
+                {
+                    // row of the other endpoint for this edge
+                    int endRow = row;
+
+                    //search for other endpoint
+                    for (int j = 0; j < column.Count; ++j)
+                    {
+                        if (column[j] != 0 && j != row)
+                        {
+                            endRow = j;
+                            break;
+                        }
+                    }
+
+                    // add opposite endpoint of edge to list
+                    neighbors.Add(vertices[endRow]);
+                }
+            }
+
+            return new HashSet<Vertex>(neighbors);
+        }
+
         // get edges where start is tail and end is head
         public CoordinateLine[] getEdges()
         {

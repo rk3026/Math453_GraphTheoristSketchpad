@@ -1,4 +1,5 @@
 ﻿using ScottPlot;
+using System.CodeDom;
 using System.Collections;
 using System.Data;
 using System.Windows.Input;
@@ -55,6 +56,90 @@ namespace GraphTheoristSketchpad.Logic
         public DataTable GetIncidenceMatrixTable()
         {
             return incidenceMatrix.ToDataTable();
+        }
+
+        // returns Dictionary of coloring if this graph can be colored by k colors
+        public Dictionary<Vertex, int>? colorableBy(int k)
+        {
+            // colors of each vertex
+            Dictionary<Vertex, int> coloring = new Dictionary<Vertex, int>();
+
+            // neighbors of each vertex
+            Dictionary<Vertex, ISet<Vertex>> neighbors = new Dictionary<Vertex, ISet<Vertex>>();
+
+            // Get neighbors on each vertex
+            foreach(Vertex v in this.Vertices)
+            {       
+                neighbors[v] = this.incidenceMatrix.getNeighborsOf(v);
+            }
+
+
+
+            if (validColoring(k, coloring, neighbors))
+                return coloring;
+            else
+                return null;
+        }
+
+        // returns coloring of graph vertces with minimum colors
+        public Dictionary<Vertex, int> minimumColoring()
+        {
+            int k = 0;
+            while(true)
+            {
+                Dictionary<Vertex, int>? coloring = colorableBy(k);
+                if (coloring != null)
+                    return coloring;
+            }
+        }
+
+        // returns true of the coloring is valid and completes the coloring if any vertices are missing.
+        private Boolean validColoring(int k, Dictionary<Vertex, int> coloring, Dictionary<Vertex, ISet<Vertex>> neighbors)
+        {
+            
+            // pick an uncolored vertex to color
+            Vertex? cVertex = null;
+            foreach (Vertex v in neighbors.Keys)
+            {
+                if (!coloring.ContainsKey(v))
+                {
+                    cVertex = v;
+                    break;
+                }
+            }
+
+            if(cVertex == null)
+            {
+                return true;
+            }
+            else
+            {
+                // validate coloring so far
+                foreach (Vertex v in coloring.Keys)
+                {
+                    foreach(Vertex n in neighbors[v])
+                    {
+                        if (coloring[v] == coloring[n])
+                        {
+                            return false;
+                        }
+                    }
+                }
+
+                // color cVertex
+                for(int i = 0; i < k; ++i)
+                {
+                    Dictionary<Vertex, int> localColoring = new Dictionary<Vertex, int>(coloring);
+                    localColoring[cVertex] = i;
+                    if(validColoring(k, localColoring, neighbors))
+                    {
+                        coloring = localColoring;
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
         public Vertex? getNearestVertex(Coordinates location, double maxDistance = 15)
