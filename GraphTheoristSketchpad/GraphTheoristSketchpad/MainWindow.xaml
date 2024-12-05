@@ -114,10 +114,26 @@
                                     <CheckBox x:Name="DisplayBridgesLinksCheckbox" Click="DisplayBridgesLinksCheckbox_Click" Content="Display Bridges and Links" Margin="0,5,0,0"/>
                                     <CheckBox x:Name="DisplayBipartiteSetsCheckbox" Click="DisplayBipartiteSetsCheckbox_Click" Content="Display Bipartite Sets" Margin="0,5,0,0"/>
                                     <CheckBox x:Name="ToggleFramedGraphButton" Content="Show Frame" Click="ToggleFramedGraphButton_Click" Margin="0,5,0,0"/>
-                                    <CheckBox x:Name="GraphChromaticColoringCheckbox" Content="Color Graph with" Margin="0,5,0,0"/>
-                                    <TextBox x:Name="kColoringNumber" Text="0" Margin="0,5,0,0"/>
-                                    <Label Content="Colors" Margin="0,5,0,0"/>
+
+                                    <StackPanel Margin="0,0,0,0">
+                                        <!-- Chromatic Coloring Inline -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0" VerticalAlignment="Center">
+                                            <CheckBox x:Name="ColorGraphCheckbox" Content="Color Graph with" Margin="0,0,5,0" VerticalAlignment="Center" Click="ColorGraphCheckbox_Click"/>
+                                            <TextBox x:Name="KColoringTextbox" Text="0" Width="40" Margin="0,0,5,0" VerticalAlignment="Center" TextChanged="KColoringTextbox_TextChanged"/>
+                                            <Label Content="colors" Margin="0,0,0,0" VerticalAlignment="Center"/>
+                                        </StackPanel>
+
+                                        <!-- Error Message -->
+                                        <TextBlock x:Name="ChromaticColoringError" 
+                                           Text="Cannot color the graph with the given number of colors." 
+                                           Foreground="Red" 
+                                           Margin="0,5,0,0" 
+                                           Visibility="Collapsed" 
+                                           FontSize="12"/>
+                                    </StackPanel>
+
                                 </StackPanel>
+
                             </Expander>
                             <Separator Margin="0,10,0,10"/>
 

@@ -15,6 +15,8 @@ namespace GraphTheoristSketchpad.Interface
         public bool IsDisplayingBridgesAndLinks { get; set; } = false;
         public bool IsDisplayingVertexDegree { get; set; } = false;
         public bool IsDisplayingBipartiteSets { get; set; } = false;
+        public bool IsKColoring { get; set; } = false;
+        public int KColoringNumber { get; set; } = 0;
         public IAxes Axes { get; set; } = new Axes();
         public IEnumerable<LegendItem> LegendItems => LegendItem.None;
         public AxisLimits GetAxisLimits() => AxisLimits.Default;
@@ -79,6 +81,28 @@ namespace GraphTheoristSketchpad.Interface
             DrawEdges(rp);
             DrawVerticesAndLabels(rp);
             DrawTemporaryLine(rp);
+            PerformKColoring();
+        }
+
+        private void PerformKColoring()
+        {
+            if (!IsKColoring) return;
+
+            Dictionary<Vertex, int> colorings = graph.colorableBy(KColoringNumber);
+            if (colorings == null) return;
+
+            foreach (Vertex v in colorings.Keys)
+            {
+                int colorIndex = colorings[v];
+                ScottPlot.Color vertexColor = GenerateColor(colorIndex, KColoringNumber); // Generate a unique color based on the index
+                v.Style.FillColor = vertexColor;
+            }
+        }
+
+        private ScottPlot.Color GenerateColor(int index, int numColors)
+        {
+            float hue = (float)index / (float)numColors;
+            return ScottPlot.Color.FromHSL(hue, 1, 1);
         }
 
         private void DrawEdges(RenderPack rp)
