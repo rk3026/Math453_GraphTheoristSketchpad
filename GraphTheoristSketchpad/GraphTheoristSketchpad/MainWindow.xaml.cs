@@ -700,6 +700,8 @@ namespace GraphTheoristSketchpad
                 KColoringTextbox.Text = graphRendererPlot.KColoringNumber.ToString();
                 KColoringTextbox.CaretIndex = KColoringTextbox.Text.Length; // Ensure cursor stays at the end
             }
+
+            GraphView.Refresh();
         }
 
 

@@ -20,7 +20,6 @@ namespace GraphTheoristSketchpad.Interface
         public IAxes Axes { get; set; } = new Axes();
         public IEnumerable<LegendItem> LegendItems => LegendItem.None;
         public AxisLimits GetAxisLimits() => AxisLimits.Default;
-        public ScottPlot.Color DefaultVertexColor { get; set; } = new ScottPlot.Color(5, 5, 50, 255);
 
         public SKPaint textPaint = new SKPaint
         {
@@ -33,7 +32,7 @@ namespace GraphTheoristSketchpad.Interface
 
         public SKPaint vertexPaint = new SKPaint
         {
-            Color = SKColors.Black,
+            Color = new SKColor(0,0,0),
             Style = SKPaintStyle.Stroke,
         };
 
@@ -79,14 +78,21 @@ namespace GraphTheoristSketchpad.Interface
         public void Render(RenderPack rp)
         {
             DrawEdges(rp);
+            PerformKColoring();
             DrawVerticesAndLabels(rp);
             DrawTemporaryLine(rp);
-            PerformKColoring();
         }
 
         private void PerformKColoring()
         {
-            if (!IsKColoring) return;
+            if (!IsKColoring)
+            {
+                foreach (Vertex v in graph.Vertices)
+                {
+                    v.Style.FillColor = new ScottPlot.Color(vertexPaint.Color.Red, vertexPaint.Color.Green, vertexPaint.Color.Blue, vertexPaint.Color.Alpha);
+                }
+                return;
+            }
 
             Dictionary<Vertex, int> colorings = graph.colorableBy(KColoringNumber);
             if (colorings == null) return;
@@ -102,7 +108,7 @@ namespace GraphTheoristSketchpad.Interface
         private ScottPlot.Color GenerateColor(int index, int numColors)
         {
             float hue = (float)index / (float)numColors;
-            return ScottPlot.Color.FromHSL(hue, 1, 1);
+            return ScottPlot.Color.FromHSL(hue, 1f, 0.5f);
         }
 
         private void DrawEdges(RenderPack rp)
