@@ -90,6 +90,7 @@ namespace GraphTheoristSketchpad.Logic
                 Dictionary<Vertex, int>? coloring = colorableBy(k);
                 if (coloring != null)
                     return coloring;
+                ++k;
             }
         }
 
@@ -101,6 +102,7 @@ namespace GraphTheoristSketchpad.Logic
                 Dictionary<Vertex, int>? coloring = colorableBy(k);
                 if (coloring != null)
                     return k;
+                ++k;
             }
         }
 
