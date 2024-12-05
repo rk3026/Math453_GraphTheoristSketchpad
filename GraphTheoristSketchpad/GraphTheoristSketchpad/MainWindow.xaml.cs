@@ -138,7 +138,7 @@ namespace GraphTheoristSketchpad
             ComponentCountLabel.Content = "Number of Components: " + graphRendererPlot.graph.GetComponentCount().ToString();
             BipartiteLabel.Content = "Is Bipartite?: " + graphRendererPlot.graph.IsBipartite().ToString();
             IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
-            //MinimumColorLabel.Content = "Chromatic Number: " + this.graphRendererPlot.graph.getMinimumColoring().ToString();
+            //MinimumColorLabel.Content = "Chromatic Number: " + this.graphRendererPlot.graph.GetChromaticNumber().ToString();
         }
 
         private void UpdateSelectionMarkers()
