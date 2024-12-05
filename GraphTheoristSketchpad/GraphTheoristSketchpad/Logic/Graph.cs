@@ -75,7 +75,7 @@ namespace GraphTheoristSketchpad.Logic
 
 
 
-            if (validColoring(k, coloring, neighbors))
+            if (validColoring(k, ref coloring, neighbors))
                 return coloring;
             else
                 return null;
@@ -107,9 +107,20 @@ namespace GraphTheoristSketchpad.Logic
         }
 
         // returns true of the coloring is valid and completes the coloring if any vertices are missing.
-        private Boolean validColoring(int k, Dictionary<Vertex, int> coloring, Dictionary<Vertex, ISet<Vertex>> neighbors)
+        private bool validColoring(int k, ref Dictionary<Vertex, int> coloring, Dictionary<Vertex, ISet<Vertex>> neighbors)
         {
-            
+            // validate coloring so far
+            foreach (Vertex v in coloring.Keys)
+            {
+                foreach (Vertex n in neighbors[v])
+                {
+                    if (coloring.ContainsKey(n) && coloring[v] == coloring[n])
+                    {
+                        return false;
+                    }
+                }
+            }
+
             // pick an uncolored vertex to color
             Vertex? cVertex = null;
             foreach (Vertex v in neighbors.Keys)
@@ -127,24 +138,12 @@ namespace GraphTheoristSketchpad.Logic
             }
             else
             {
-                // validate coloring so far
-                foreach (Vertex v in coloring.Keys)
-                {
-                    foreach(Vertex n in neighbors[v])
-                    {
-                        if (coloring[v] == coloring[n])
-                        {
-                            return false;
-                        }
-                    }
-                }
-
                 // color cVertex
                 for(int i = 0; i < k; ++i)
                 {
                     Dictionary<Vertex, int> localColoring = new Dictionary<Vertex, int>(coloring);
                     localColoring[cVertex] = i;
-                    if(validColoring(k, localColoring, neighbors))
+                    if(validColoring(k, ref localColoring, neighbors))
                     {
                         coloring = localColoring;
                         return true;
