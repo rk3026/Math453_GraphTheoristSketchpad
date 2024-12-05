@@ -114,9 +114,17 @@ namespace GraphTheoristSketchpad.Interface
 
         private ScottPlot.Color GenerateColor(int index, int numColors)
         {
-            float hue = (float)index / (float)numColors;
-            return ScottPlot.Color.FromHSL(hue, 1f, 0.5f);
+            // Distribute colors in hue space more effectively
+            float hue = (float)index / (float)numColors; // Linear hue distribution
+            hue = (float)(Math.Pow(hue, 0.8)); // Adjust distribution for better differentiation
+
+            // Vary saturation and lightness to create distinct colors
+            //float saturation = 0.6f + 0.4f * (index % 2); // Alternate saturation levels
+            float lightness = 0.4f + 0.2f * ((index / 2) % 2); // Alternate lightness levels
+
+            return ScottPlot.Color.FromHSL(hue, 1f, lightness);
         }
+
 
         private void DrawEdges(RenderPack rp)
         {
