@@ -673,6 +673,37 @@ namespace GraphTheoristSketchpad
             this.GraphView.Refresh();
         }
 
+        private void ColorGraphCheckbox_Click(object sender, RoutedEventArgs e)
+        {
+            graphRendererPlot.IsKColoring = !graphRendererPlot.IsKColoring;
+            GraphView.Refresh();
+        }
+
+        private void KColoringTextbox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(KColoringTextbox.Text))
+            {
+                // Handle empty input by resetting or setting to a default value
+                graphRendererPlot.KColoringNumber = 0; // Default value, adjust as needed
+                return;
+            }
+
+            // Attempt to parse the input
+            if (int.TryParse(KColoringTextbox.Text, out int newValue))
+            {
+                // Update the graph's K-coloring number
+                graphRendererPlot.KColoringNumber = newValue;
+            }
+            else
+            {
+                // Revert to the last valid value
+                KColoringTextbox.Text = graphRendererPlot.KColoringNumber.ToString();
+                KColoringTextbox.CaretIndex = KColoringTextbox.Text.Length; // Ensure cursor stays at the end
+            }
+        }
+
+
+
         private void RefitButton_Click(Object sender, RoutedEventArgs e)
         {
             graphRendererPlot.Refit();

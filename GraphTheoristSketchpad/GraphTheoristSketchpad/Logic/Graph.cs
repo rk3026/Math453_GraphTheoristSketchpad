@@ -132,7 +132,7 @@ namespace GraphTheoristSketchpad.Logic
                 {
                     foreach(Vertex n in neighbors[v])
                     {
-                        if (coloring[v] == coloring[n])
+                        if (coloring.ContainsKey(n) && coloring[v] == coloring[n])
                         {
                             return false;
                         }
