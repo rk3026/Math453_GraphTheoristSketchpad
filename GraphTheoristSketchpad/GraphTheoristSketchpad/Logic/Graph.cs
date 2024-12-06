@@ -72,9 +72,11 @@ namespace GraphTheoristSketchpad.Logic
             foreach(Vertex v in this.Vertices)
             {       
                 neighbors[v] = this.incidenceMatrix.getNeighborsOf(v);
+
+                // if there's a loop, graph is not colorable
+                if (neighbors[v].Contains(v))
+                    return null;
             }
-
-
 
             if (validColoring(k, ref coloring, neighbors))
                 return coloring;
@@ -83,8 +85,13 @@ namespace GraphTheoristSketchpad.Logic
         }
 
         // returns coloring of graph vertces with minimum colors
-        public Dictionary<Vertex, int> minimumColoring()
+        public Dictionary<Vertex, int>? minimumColoring()
         {
+            // no coloring for graph with loops
+            if (this.incidenceMatrix.containsLoop())
+                return null;
+
+            // check every smallest k to see if graph is colorable by it
             int k = 0;
             while(true)
             {
@@ -97,6 +104,11 @@ namespace GraphTheoristSketchpad.Logic
 
         public int getChromaticNumber()
         {
+            // no coloring for graph with loops
+            if (this.incidenceMatrix.containsLoop())
+                return 0;
+
+            // check every smallest k to see if graph is colorable by it
             int k = 0;
             while (true)
             {
@@ -120,9 +132,11 @@ namespace GraphTheoristSketchpad.Logic
             foreach (Vertex v in this.Vertices)
             {
                 neighbors[v] = this.incidenceMatrix.getNeighborsOf(v);
+
+                // if there's a loop, graph is not colorable
+                if (neighbors[v].Contains(v))
+                    return 0;
             }
-
-
 
             return getChromaticPolynomial(k, coloring, neighbors);
         }
