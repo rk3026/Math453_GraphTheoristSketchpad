@@ -2,6 +2,7 @@
 using System.CodeDom;
 using System.Collections;
 using System.Data;
+using System.Net.Http.Headers;
 using System.Windows.Input;
 
 namespace GraphTheoristSketchpad.Logic
@@ -71,9 +72,11 @@ namespace GraphTheoristSketchpad.Logic
             foreach(Vertex v in this.Vertices)
             {       
                 neighbors[v] = this.incidenceMatrix.getNeighborsOf(v);
+
+                // if there's a loop, graph is not colorable
+                if (neighbors[v].Contains(v))
+                    return null;
             }
-
-
 
             if (validColoring(k, ref coloring, neighbors))
                 return coloring;
@@ -82,8 +85,13 @@ namespace GraphTheoristSketchpad.Logic
         }
 
         // returns coloring of graph vertces with minimum colors
-        public Dictionary<Vertex, int> minimumColoring()
+        public Dictionary<Vertex, int>? minimumColoring()
         {
+            // no coloring for graph with loops
+            if (this.incidenceMatrix.containsLoop())
+                return null;
+
+            // check every smallest k to see if graph is colorable by it
             int k = 0;
             while(true)
             {
@@ -96,6 +104,11 @@ namespace GraphTheoristSketchpad.Logic
 
         public int getChromaticNumber()
         {
+            // no coloring for graph with loops
+            if (this.incidenceMatrix.containsLoop())
+                return 0;
+
+            // check every smallest k to see if graph is colorable by it
             int k = 0;
             while (true)
             {
@@ -103,6 +116,77 @@ namespace GraphTheoristSketchpad.Logic
                 if (coloring != null)
                     return k;
                 ++k;
+            }
+        }
+
+        // returns the number of ways to color this graph with k colors
+        public int getChromaticPolynomial(int k)
+        {
+            // colors of each vertex
+            Dictionary<Vertex, int> coloring = new Dictionary<Vertex, int>();
+
+            // neighbors of each vertex
+            Dictionary<Vertex, ISet<Vertex>> neighbors = new Dictionary<Vertex, ISet<Vertex>>();
+
+            // Get neighbors on each vertex
+            foreach (Vertex v in this.Vertices)
+            {
+                neighbors[v] = this.incidenceMatrix.getNeighborsOf(v);
+
+                // if there's a loop, graph is not colorable
+                if (neighbors[v].Contains(v))
+                    return 0;
+            }
+
+            return getChromaticPolynomial(k, coloring, neighbors);
+        }
+
+        // returns number of ways to color this graph with k colors when colors in coloring are already decided
+        private int getChromaticPolynomial(int k, Dictionary<Vertex, int> coloring, Dictionary<Vertex, ISet<Vertex>> neighbors)
+        {
+            // validate coloring so far
+            foreach (Vertex v in coloring.Keys)
+            {
+                foreach (Vertex n in neighbors[v])
+                {
+                    if (coloring.ContainsKey(n) && coloring[v] == coloring[n])
+                    {
+                        return 0;
+                    }
+                }
+            }
+
+            // pick an uncolored vertex to color
+            Vertex? cVertex = null;
+            foreach (Vertex v in neighbors.Keys)
+            {
+                if (!coloring.ContainsKey(v))
+                {
+                    cVertex = v;
+                    break;
+                }
+            }
+
+            if (cVertex == null)
+            {
+                // coloring is complete and correct. Count it.
+                return 1;
+            }
+            else
+            {
+                // total number of ways to choose remaining colors
+                int sum = 0;
+
+                // color cVertex
+                for (int i = 0; i < k; ++i)
+                {
+                    Dictionary<Vertex, int> localColoring = new Dictionary<Vertex, int>(coloring);
+
+                    localColoring[cVertex] = i;
+                    sum += getChromaticPolynomial(k, localColoring, neighbors); 
+                }
+
+                return sum;
             }
         }
 

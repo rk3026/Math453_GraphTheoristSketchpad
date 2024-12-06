@@ -86,8 +86,28 @@ namespace GraphTheoristSketchpad.Logic
             return table;
         }
 
+        // returns true if this matrix contains a looping edge
+        public bool containsLoop()
+        {
+            // check each edge for a column that contains only one weight
+            for (int i = 0; i < this.matrix.ColumnCount; ++i)
+            {
+                Vector<double> column = this.matrix.Column(i);
 
+                int nonZeroEntries = 0;
+                foreach (double w in column)
+                {
+                    if (w != 0)
+                        ++nonZeroEntries;
+                }
 
+                // if there's exactly 1 weight in column, then it's a looping edge
+                if (nonZeroEntries == 1)
+                    return true;
+            }
+
+            return false;
+        }
 
         // Adds a column to the incidenceMatrix for this new edge.
         // Also adds rows if endpoints are new vertices.
