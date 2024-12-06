@@ -131,14 +131,24 @@ namespace GraphTheoristSketchpad
 
         private void UpdateGraphInfoUI(object? sender, EventArgs e)
         {
-            VertexCountLabel.Content = "Number of Vertices: " + this.graphRendererPlot.graph.Vertices.Count.ToString();
-            EdgeCountLabel.Content = "Number of Edges: " + this.graphRendererPlot.graph.getEdgeCount().ToString();
-            ComponentCountLabel.Content = "Number of Components: ";
-            BipartiteLabel.Content = "Is Bipartite?: ";
-            ComponentCountLabel.Content = "Number of Components: " + graphRendererPlot.graph.GetComponentCount().ToString();
-            BipartiteLabel.Content = "Is Bipartite?: " + graphRendererPlot.graph.IsBipartite().ToString();
-            IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
-            MinimumColorLabel.Content = "Chromatic Number: " + this.graphRendererPlot.graph.getChromaticNumber().ToString();
+            graphRendererPlot.PerformKColoring();
+                VertexCountLabel.Content = "Number of Vertices: " + this.graphRendererPlot.graph.Vertices.Count.ToString();
+                EdgeCountLabel.Content = "Number of Edges: " + this.graphRendererPlot.graph.getEdgeCount().ToString();
+                ComponentCountLabel.Content = "Number of Components: ";
+                BipartiteLabel.Content = "Is Bipartite?: ";
+                ComponentCountLabel.Content = "Number of Components: " + graphRendererPlot.graph.GetComponentCount().ToString();
+                BipartiteLabel.Content = "Is Bipartite?: " + graphRendererPlot.graph.IsBipartite().ToString();
+                IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
+                MinimumColorLabel.Content = "Chromatic Number: " + this.graphRendererPlot.graph.getChromaticNumber().ToString();
+                if (graphRendererPlot.KColoringSuccessful)
+                {
+                    ChromaticColoringError.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    ChromaticColoringError.Visibility = Visibility.Visible;
+                }
+            GraphView.Refresh();
         }
 
         private void UpdateSelectionMarkers()
@@ -676,15 +686,18 @@ namespace GraphTheoristSketchpad
         private void ColorGraphCheckbox_Click(object sender, RoutedEventArgs e)
         {
             graphRendererPlot.IsKColoring = !graphRendererPlot.IsKColoring;
+            UpdateGraphInfoUI(this, null);
             GraphView.Refresh();
         }
 
         private void KColoringTextbox_TextChanged(object sender, TextChangedEventArgs e)
         {
+            graphRendererPlot.PerformKColoring();
             if (string.IsNullOrWhiteSpace(KColoringTextbox.Text))
             {
                 // Handle empty input by resetting or setting to a default value
                 graphRendererPlot.KColoringNumber = 0; // Default value, adjust as needed
+                GraphView.Refresh();
                 return;
             }
 
@@ -701,10 +714,9 @@ namespace GraphTheoristSketchpad
                 KColoringTextbox.CaretIndex = KColoringTextbox.Text.Length; // Ensure cursor stays at the end
             }
 
+            UpdateGraphInfoUI(this, null);
             GraphView.Refresh();
         }
-
-
 
         private void RefitButton_Click(Object sender, RoutedEventArgs e)
         {

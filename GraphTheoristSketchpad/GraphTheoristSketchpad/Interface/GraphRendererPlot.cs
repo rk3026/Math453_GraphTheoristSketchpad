@@ -17,6 +17,7 @@ namespace GraphTheoristSketchpad.Interface
         public bool IsDisplayingBipartiteSets { get; set; } = false;
         public bool IsKColoring { get; set; } = false;
         public int KColoringNumber { get; set; } = 0;
+        public bool KColoringSuccessful { get; private set; } = true;
         public IAxes Axes { get; set; } = new Axes();
         public IEnumerable<LegendItem> LegendItems => LegendItem.None;
         public AxisLimits GetAxisLimits() => AxisLimits.Default;
@@ -78,13 +79,14 @@ namespace GraphTheoristSketchpad.Interface
         public void Render(RenderPack rp)
         {
             DrawEdges(rp);
-            PerformKColoring();
             DrawVerticesAndLabels(rp);
             DrawTemporaryLine(rp);
         }
 
-        private void PerformKColoring()
+        public void PerformKColoring()
         {
+            KColoringSuccessful = true;
+
             if (!IsKColoring)
             {
                 foreach (Vertex v in graph.Vertices)
@@ -94,8 +96,13 @@ namespace GraphTheoristSketchpad.Interface
                 return;
             }
 
-            Dictionary<Vertex, int> colorings = graph.colorableBy(KColoringNumber);
-            if (colorings == null) return;
+            Dictionary<Vertex, int>? colorings = graph.colorableBy(KColoringNumber);
+            if (colorings == null)
+            {
+                KColoringSuccessful = false;
+                return;
+            }
+
 
             foreach (Vertex v in colorings.Keys)
             {
@@ -107,9 +114,17 @@ namespace GraphTheoristSketchpad.Interface
 
         private ScottPlot.Color GenerateColor(int index, int numColors)
         {
-            float hue = (float)index / (float)numColors;
-            return ScottPlot.Color.FromHSL(hue, 1f, 0.5f);
+            // Distribute colors in hue space more effectively
+            float hue = (float)index / (float)numColors; // Linear hue distribution
+            hue = (float)(Math.Pow(hue, 0.8)); // Adjust distribution for better differentiation
+
+            // Vary saturation and lightness to create distinct colors
+            //float saturation = 0.6f + 0.4f * (index % 2); // Alternate saturation levels
+            float lightness = 0.4f + 0.2f * ((index / 2) % 2); // Alternate lightness levels
+
+            return ScottPlot.Color.FromHSL(hue, 1f, lightness);
         }
+
 
         private void DrawEdges(RenderPack rp)
         {
@@ -299,13 +314,16 @@ namespace GraphTheoristSketchpad.Interface
 
         private void DrawVerticesAndLabels(RenderPack rp)
         {
+            SKPaint paint = vertexPaint.Clone(); // IMPORTANT, or else the color is changed in drawmarker.
             // Draw vertices and their labels
             foreach (Vertex v in graph.Vertices)
             {
                 // Draw the actual vertex:
                 Coordinates centerCoordinates = v.Location;
                 Pixel centerPixel = Axes.GetPixel(centerCoordinates);
-                Drawing.DrawMarker(rp.Canvas, vertexPaint, centerPixel, v.Style);
+
+                // THIS MODIFIES PAINT, so create new paints before passing in to this
+                Drawing.DrawMarker(rp.Canvas, paint, centerPixel, v.Style);
 
                 // Draw the vertex label:
                 string vertexLabel = v.Label;
