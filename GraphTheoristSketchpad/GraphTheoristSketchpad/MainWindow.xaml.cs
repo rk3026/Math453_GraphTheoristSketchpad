@@ -138,6 +138,7 @@ namespace GraphTheoristSketchpad
             BipartiteLabel.Content = "Is Bipartite?: " + graphRendererPlot.graph.IsBipartite().ToString();
             IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
             MinimumColorLabel.Content = "Chromatic Number: " + this.graphRendererPlot.graph.getChromaticNumber().ToString();
+            ChromaticPolynomialLabel.Content = "Chromatic Polynomial: " + this.graphRendererPlot.GetCurrentChromaticPolynomial().ToString();
 
             // Handle Chromatic Coloring Error visibility
             if (graphRendererPlot.KColoringSuccessful)
@@ -189,6 +190,21 @@ namespace GraphTheoristSketchpad
             }
         }
 
+        // Event handler for ComboBox selection change
+        private void OnComboBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            if (comboBox == null || comboBox.SelectedItem == null) return;
+
+            // Retrieve the selected ComboBoxItem and its associated Vertex
+            var selectedItem = comboBox.SelectedItem as ComboBoxItem;
+            var vertex = selectedItem?.Tag as Vertex;
+            if (vertex == null) return;
+
+            // Highlight the selected vertex
+            HighlightVertex(vertex);
+        }
+
         private void HighlightVertex(Vertex vertex)
         {
             // Clear previous markers
@@ -203,6 +219,7 @@ namespace GraphTheoristSketchpad
 
             GraphView.Refresh(); // Refresh to display the updated visuals
         }
+
 
         private void AlgorithmList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {

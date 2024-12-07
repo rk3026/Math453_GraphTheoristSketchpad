@@ -56,8 +56,44 @@ namespace GraphTheoristSketchpad.Logic
 
         public DataTable GetIncidenceMatrixTable()
         {
-            return incidenceMatrix.ToDataTable();
+            // Get the DataTable from the incidence matrix
+            DataTable dt = incidenceMatrix.ToDataTable();
+
+            // Loop through all the vertices to ensure they are present in the table
+            foreach (Vertex v in Vertices)
+            {
+                // Check if the vertex is already in the first column (Vertex column)
+                bool vertexExists = false;
+
+                foreach (DataRow row in dt.Rows)
+                {
+                    if (row["Vertex"] == v)
+                    {
+                        vertexExists = true;
+                        break;
+                    }
+                }
+
+                // If the vertex isn't found, add it
+                if (!vertexExists)
+                {
+                    DataRow newRow = dt.NewRow();
+                    newRow["Vertex"] = v;
+
+                    // Add columns for edges, initialize them to 0 or any default value
+                    for (int col = 1; col < dt.Columns.Count; col++)
+                    {
+                        newRow[col] = 0;  // Set default value for the edges (0 or another appropriate default)
+                    }
+
+                    // Add the new row to the DataTable
+                    dt.Rows.Add(newRow);
+                }
+            }
+
+            return dt;
         }
+
 
         // returns Dictionary of coloring if this graph can be colored by k colors
         public Dictionary<Vertex, int>? colorableBy(int k)

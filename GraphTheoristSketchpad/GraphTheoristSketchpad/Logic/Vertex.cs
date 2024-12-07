@@ -29,5 +29,10 @@ namespace GraphTheoristSketchpad.Logic
             this.Location = new Coordinates(x, y);
             this.Style = style;
         }
+
+        public override string ToString()
+        {
+            return Label;
+        }
     }
 }

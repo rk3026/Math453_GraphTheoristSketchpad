@@ -57,7 +57,7 @@ namespace GraphTheoristSketchpad.Logic
             DataTable table = new DataTable();
 
             // Add a column for vertex names as the first column
-            table.Columns.Add("Vertex", typeof(string));
+            table.Columns.Add("Vertex", typeof(Vertex));
 
             // Add columns for each edge, named "Edge 1", "Edge 2", etc.
             for (int col = 0; col < matrix.ColumnCount; col++)
@@ -71,7 +71,7 @@ namespace GraphTheoristSketchpad.Logic
                 DataRow dataRow = table.NewRow();
 
                 // Set the vertex label as the first column
-                dataRow["Vertex"] = vertices[row].Label;
+                dataRow["Vertex"] = vertices[row];
 
                 // Populate each cell in the row with the incidenceMatrix value
                 for (int col = 0; col < matrix.ColumnCount; col++)

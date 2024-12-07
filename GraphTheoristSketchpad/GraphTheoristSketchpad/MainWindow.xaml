@@ -222,24 +222,25 @@
                                         <!-- Dijkstra Parameters -->
                                         <StackPanel Name="DijkstraInputs" Visibility="Collapsed">
                                             <TextBlock Text="Starting Node:" Margin="0,5,0,2" />
-                                            <ComboBox Name="DijkstraStartNodeSelector" Width="200" Margin="0,0,0,10" />
+                                            <ComboBox Name="DijkstraStartNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
                                             <TextBlock Text="Ending Node:" Margin="0,5,0,2" />
-                                            <ComboBox Name="DijkstraEndNodeSelector" Width="200" Margin="0,0,0,10" />
+                                            <ComboBox Name="DijkstraEndNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
                                         </StackPanel>
 
                                         <!-- Ford-Fulkerson Parameters -->
                                         <StackPanel Name="FordFulkersonInputs" Visibility="Collapsed">
                                             <TextBlock Text="Source Node:" Margin="0,5,0,2" />
-                                            <ComboBox Name="FordSourceNodeSelector" Width="200" Margin="0,0,0,10" />
+                                            <ComboBox Name="FordSourceNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
                                             <TextBlock Text="Sink Node:" Margin="0,5,0,2" />
-                                            <ComboBox Name="FordSinkNodeSelector" Width="200" Margin="0,0,0,10" />
+                                            <ComboBox Name="FordSinkNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
                                         </StackPanel>
 
                                         <!-- Spanning Tree Parameters -->
                                         <StackPanel Name="SpanningTreeInputs" Visibility="Collapsed">
                                             <TextBlock Text="Select Root Node (Optional):" Margin="0,5,0,2" />
-                                            <ComboBox Name="SpanningTreeRootNodeSelector" Width="200" Margin="0,0,0,10" />
+                                            <ComboBox Name="SpanningTreeRootNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
                                         </StackPanel>
+
 
                                     </StackPanel>
 
