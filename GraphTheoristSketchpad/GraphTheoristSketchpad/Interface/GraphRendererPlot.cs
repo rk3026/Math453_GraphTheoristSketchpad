@@ -433,5 +433,10 @@ namespace GraphTheoristSketchpad.Interface
             temporaryLine = null;
             graph.Clear();
         }
+
+        public int GetCurrentChromaticPolynomial()
+        {
+            return this.graph.getChromaticPolynomial(KColoringNumber);
+        }
     }
 }

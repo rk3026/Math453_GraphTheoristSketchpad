@@ -146,7 +146,7 @@
                                     <!-- Graph Title -->
                                     <TextBlock Text="Graph Title:" Margin="0,10,0,0"/>
                                     <TextBox x:Name="GraphTitleTextbox" Width="100" Margin="0,5,0,0" Text="Graph" TextChanged="GraphTitleTextbox_TextChanged"/>
-                                    
+
                                     <!-- Vertex Color -->
                                     <TextBlock Text="Vertex Color:" Margin="0,5,0,0"/>
                                     <xctk:ColorPicker x:Name="NewVertexColorPicker" Width="200" Height="30" SelectedColorChanged="NewVertexColorPicker_SelectedColorChanged"/>
@@ -176,7 +176,7 @@
                             <Separator Margin="0,10,0,10"/>
 
                             <!-- Graph Information -->
-                            <Expander IsExpanded="True">
+                            <Expander IsExpanded="False">
                                 <Expander.Header>
                                     <TextBlock Text="Graph Information" FontWeight="Bold" />
                                 </Expander.Header>
@@ -194,12 +194,63 @@
                                     <Label Name="ComponentCountLabel" Content="0" Margin="0,0,0,5"/>
                                     <Label Name="BipartiteLabel" Content="Unknown" Margin="0,0,0,5"/>
                                     <Label Name="MinimumColorLabel" Content="Unknown" Margin="0,0,0,5"/>
+                                    <Label Name="ChromaticPolynomialLabel" Content="" Margin="0,0,0,5"/>
                                     <TextBlock Text="Additional graph details or metrics can go here." TextWrapping="Wrap" Margin="0,5,0,0"/>
                                 </StackPanel>
                             </Expander>
+
+                            <Separator Margin="0,10,0,10"/>
+
+                            <!-- Algorithms -->
+                            <Expander IsExpanded="False">
+                                <Expander.Header>
+                                    <TextBlock Text="Algorithms" FontWeight="Bold" />
+                                </Expander.Header>
+                                <StackPanel Margin="10">
+
+                                    <!-- Algorithm Selection -->
+                                    <TextBlock Text="Select Algorithm:" FontWeight="Bold" Margin="0,0,0,5" />
+                                    <ComboBox Name="AlgorithmSelector" Width="250" Margin="0,0,0,10" SelectionChanged="AlgorithmList_SelectionChanged">
+                                        <ComboBoxItem>Dijkstra's Algorithm</ComboBoxItem>
+                                        <ComboBoxItem>Ford-Fulkerson (Max Flow)</ComboBoxItem>
+                                        <ComboBoxItem>Spanning Tree Construction</ComboBoxItem>
+                                    </ComboBox>
+
+                                    <!-- Input Parameters -->
+                                    <StackPanel Name="InputParameters" Margin="0,5,0,10">
+
+                                        <!-- Dijkstra Parameters -->
+                                        <StackPanel Name="DijkstraInputs" Visibility="Collapsed">
+                                            <TextBlock Text="Starting Node:" Margin="0,5,0,2" />
+                                            <ComboBox Name="DijkstraStartNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
+                                            <TextBlock Text="Ending Node:" Margin="0,5,0,2" />
+                                            <ComboBox Name="DijkstraEndNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
+                                        </StackPanel>
+
+                                        <!-- Ford-Fulkerson Parameters -->
+                                        <StackPanel Name="FordFulkersonInputs" Visibility="Collapsed">
+                                            <TextBlock Text="Source Node:" Margin="0,5,0,2" />
+                                            <ComboBox Name="FordSourceNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
+                                            <TextBlock Text="Sink Node:" Margin="0,5,0,2" />
+                                            <ComboBox Name="FordSinkNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
+                                        </StackPanel>
+
+                                        <!-- Spanning Tree Parameters -->
+                                        <StackPanel Name="SpanningTreeInputs" Visibility="Collapsed">
+                                            <TextBlock Text="Select Root Node (Optional):" Margin="0,5,0,2" />
+                                            <ComboBox Name="SpanningTreeRootNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
+                                        </StackPanel>
+
+
+                                    </StackPanel>
+
+                                    <!-- Run Button -->
+                                    <Button Content="Run Algorithm" Name="RunAlgorithmButton" Width="150" Margin="0,10,0,10" Click="OnRunAlgorithmClicked" />
+
+                                </StackPanel>
+                            </Expander>
+
                         </StackPanel>
-
-
                     </ScrollViewer>
                 </Grid>
             </Border>

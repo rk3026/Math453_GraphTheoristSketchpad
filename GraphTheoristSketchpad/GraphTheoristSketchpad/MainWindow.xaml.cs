@@ -132,24 +132,169 @@ namespace GraphTheoristSketchpad
         private void UpdateGraphInfoUI(object? sender, EventArgs e)
         {
             graphRendererPlot.PerformKColoring();
-                VertexCountLabel.Content = "Number of Vertices: " + this.graphRendererPlot.graph.Vertices.Count.ToString();
-                EdgeCountLabel.Content = "Number of Edges: " + this.graphRendererPlot.graph.getEdgeCount().ToString();
-                ComponentCountLabel.Content = "Number of Components: ";
-                BipartiteLabel.Content = "Is Bipartite?: ";
-                ComponentCountLabel.Content = "Number of Components: " + graphRendererPlot.graph.GetComponentCount().ToString();
-                BipartiteLabel.Content = "Is Bipartite?: " + graphRendererPlot.graph.IsBipartite().ToString();
-                IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
-                MinimumColorLabel.Content = "Chromatic Number: " + this.graphRendererPlot.graph.getChromaticNumber().ToString();
-                if (graphRendererPlot.KColoringSuccessful)
-                {
-                    ChromaticColoringError.Visibility = Visibility.Collapsed;
-                }
-                else
-                {
-                    ChromaticColoringError.Visibility = Visibility.Visible;
-                }
+            VertexCountLabel.Content = "Number of Vertices: " + this.graphRendererPlot.graph.Vertices.Count.ToString();
+            EdgeCountLabel.Content = "Number of Edges: " + this.graphRendererPlot.graph.getEdgeCount().ToString();
+            ComponentCountLabel.Content = "Number of Components: " + graphRendererPlot.graph.GetComponentCount().ToString();
+            BipartiteLabel.Content = "Is Bipartite?: " + graphRendererPlot.graph.IsBipartite().ToString();
+            IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
+            MinimumColorLabel.Content = "Chromatic Number: " + this.graphRendererPlot.graph.getChromaticNumber().ToString();
+            ChromaticPolynomialLabel.Content = "Chromatic Polynomial: " + this.graphRendererPlot.GetCurrentChromaticPolynomial().ToString();
+
+            // Handle Chromatic Coloring Error visibility
+            if (graphRendererPlot.KColoringSuccessful)
+            {
+                ChromaticColoringError.Visibility = Visibility.Collapsed;
+            }
+            else
+            {
+                ChromaticColoringError.Visibility = Visibility.Visible;
+            }
+
+            // Update the algorithm selectors
+            UpdateAlgorithmSelectors();
+
+            // Refresh the graph view
             GraphView.Refresh();
         }
+
+        private void UpdateAlgorithmSelectors()
+        {
+            // Clear the current items in all selectors
+            DijkstraStartNodeSelector.Items.Clear();
+            DijkstraEndNodeSelector.Items.Clear();
+            FordSourceNodeSelector.Items.Clear();
+            FordSinkNodeSelector.Items.Clear();
+            SpanningTreeRootNodeSelector.Items.Clear();
+
+            // Get the list of vertices from the graph
+            List<Vertex> vertices = graphRendererPlot.graph.Vertices.ToList();
+
+            // Populate the selectors with the updated vertices
+            foreach (var vertex in vertices)
+            {
+                // Create ComboBoxItems with the vertex as the underlying data
+                var startItem = new ComboBoxItem { Content = vertex.Label, Tag = vertex };
+                DijkstraStartNodeSelector.Items.Add(startItem);
+
+                var endItem = new ComboBoxItem { Content = vertex.Label, Tag = vertex };
+                DijkstraEndNodeSelector.Items.Add(endItem);
+
+                var sourceItem = new ComboBoxItem { Content = vertex.Label, Tag = vertex };
+                FordSourceNodeSelector.Items.Add(sourceItem);
+
+                var sinkItem = new ComboBoxItem { Content = vertex.Label, Tag = vertex };
+                FordSinkNodeSelector.Items.Add(sinkItem);
+
+                var rootItem = new ComboBoxItem { Content = vertex.Label, Tag = vertex };
+                SpanningTreeRootNodeSelector.Items.Add(rootItem);
+            }
+        }
+
+        // Event handler for ComboBox selection change
+        private void OnComboBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var comboBox = sender as ComboBox;
+            if (comboBox == null || comboBox.SelectedItem == null) return;
+
+            // Retrieve the selected ComboBoxItem and its associated Vertex
+            var selectedItem = comboBox.SelectedItem as ComboBoxItem;
+            var vertex = selectedItem?.Tag as Vertex;
+            if (vertex == null) return;
+
+            // Highlight the selected vertex
+            HighlightVertex(vertex);
+        }
+
+        private void HighlightVertex(Vertex vertex)
+        {
+            // Clear previous markers
+            GraphView.Plot.Remove<ScottPlot.Plottables.Marker>();
+
+            var newMarker = GraphView.Plot.Add.Marker(vertex.Location);
+            newMarker.MarkerStyle.Shape = MarkerShape.FilledCircle;
+            newMarker.MarkerStyle.Size = 30;
+            newMarker.MarkerStyle.FillColor = ScottPlot.Colors.Blue.WithOpacity(0.4); // Selected color
+            newMarker.MarkerStyle.LineColor = ScottPlot.Colors.Blue; // Outline color
+            newMarker.MarkerStyle.LineWidth = 1;
+
+            GraphView.Refresh(); // Refresh to display the updated visuals
+        }
+
+
+        private void AlgorithmList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // Collapse all inputs by default
+            DijkstraInputs.Visibility = Visibility.Collapsed;
+            FordFulkersonInputs.Visibility = Visibility.Collapsed;
+            SpanningTreeInputs.Visibility = Visibility.Collapsed;
+
+            // Get the selected algorithm from the ComboBox
+            var selectedAlgorithm = (AlgorithmSelector.SelectedItem as ComboBoxItem)?.Content.ToString();
+            if (selectedAlgorithm == null) return;
+
+            // Populate selectors based on the selected algorithm
+            switch (selectedAlgorithm)
+            {
+                case "Dijkstra's Algorithm":
+                    DijkstraInputs.Visibility = Visibility.Visible;
+                    break;
+                case "Ford-Fulkerson (Max Flow)":
+                    FordFulkersonInputs.Visibility = Visibility.Visible;
+                    break;
+                case "Spanning Tree Construction":
+                    SpanningTreeInputs.Visibility = Visibility.Visible;
+                    break;
+            }
+        }
+
+
+        private void OnRunAlgorithmClicked(object sender, RoutedEventArgs e)
+        {
+            var selectedAlgorithm = (AlgorithmSelector.SelectedItem as ListBoxItem)?.Content.ToString();
+            switch (selectedAlgorithm)
+            {
+                case "Dijkstra's Algorithm":
+                    var dijkstraStartItem = DijkstraStartNodeSelector.SelectedItem as ComboBoxItem;
+                    var dijkstraEndItem = DijkstraEndNodeSelector.SelectedItem as ComboBoxItem;
+
+                    // Get the actual Vertex objects
+                    var dijkstraStartVertex = dijkstraStartItem?.Tag as Vertex;
+                    var dijkstraEndVertex = dijkstraEndItem?.Tag as Vertex;
+
+                    if (dijkstraStartVertex != null && dijkstraEndVertex != null)
+                    {
+                        // Now you can use the actual Vertex objects in your algorithm
+                        // Call your Dijkstra's algorithm with dijkstraStartVertex and dijkstraEndVertex
+                    }
+                    break;
+
+                case "Ford-Fulkerson":
+                    var fordSourceItem = FordSourceNodeSelector.SelectedItem as ComboBoxItem;
+                    var fordSinkItem = FordSinkNodeSelector.SelectedItem as ComboBoxItem;
+
+                    // Get the actual Vertex objects
+                    var fordSourceVertex = fordSourceItem?.Tag as Vertex;
+                    var fordSinkVertex = fordSinkItem?.Tag as Vertex;
+
+                    if (fordSourceVertex != null && fordSinkVertex != null)
+                    {
+                        // Call Ford-Fulkerson algorithm with fordSourceVertex and fordSinkVertex
+                    }
+                    break;
+
+                case "Minimum Spanning Tree":
+                    var spanningTreeRootItem = SpanningTreeRootNodeSelector.SelectedItem as ComboBoxItem;
+                    var spanningTreeRootVertex = spanningTreeRootItem?.Tag as Vertex;
+
+                    if (spanningTreeRootVertex != null)
+                    {
+                        // Call Spanning Tree algorithm with spanningTreeRootVertex
+                    }
+                    break;
+            }
+        }
+
+
 
         private void UpdateSelectionMarkers()
         {
