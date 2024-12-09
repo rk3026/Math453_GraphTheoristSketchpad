@@ -138,7 +138,7 @@ namespace GraphTheoristSketchpad
             BipartiteLabel.Content = "Is Bipartite?: " + graphRendererPlot.graph.IsBipartite().ToString();
             IncidenceMatrixDataGrid.ItemsSource = this.graphRendererPlot.graph.GetIncidenceMatrixTable().DefaultView;
             MinimumColorLabel.Content = "Chromatic Number: " + this.graphRendererPlot.graph.getChromaticNumber().ToString();
-            ChromaticPolynomialLabel.Content = "Chromatic Polynomial: " + this.graphRendererPlot.GetCurrentChromaticPolynomial().ToString();
+            //ChromaticPolynomialLabel.Content = "Chromatic Polynomial: " + this.graphRendererPlot.GetCurrentChromaticPolynomial().ToString();
 
             // Handle Chromatic Coloring Error visibility
             if (graphRendererPlot.KColoringSuccessful)

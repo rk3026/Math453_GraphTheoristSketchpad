@@ -94,6 +94,20 @@ namespace GraphTheoristSketchpad.Logic
             return dt;
         }
 
+        //DEBUG TEST FUNCTION
+        public DataTable GetIncidenceMatrixTable(Vertex v)
+        {
+            // Get the DataTable from the incidence matrix
+            DataTable dt = incidenceMatrix.getComponentMatrixOf(v).ToDataTable();
+
+            return dt;
+        }
+
+        // returns ordered list representing shortest path calculate with Dijkstra's algorithm
+        public List<KeyValuePair<Vertex, Vertex>>? shortestPath(Vertex start, Vertex end)
+        {
+            return null;
+        }
 
         // returns Dictionary of coloring if this graph can be colored by k colors
         public Dictionary<Vertex, int>? colorableBy(int k)
@@ -153,6 +167,85 @@ namespace GraphTheoristSketchpad.Logic
                     return k;
                 ++k;
             }
+        }
+
+        // returns string representing chromatic polynomial
+        public string getChromaticPolynomial()
+        {
+            // the number of ways to color a graph with no vertices is always 1
+            if(this.Vertices.Count() == 0)
+            {
+                return "1";
+            }
+            // if there's loops then there's no way to color the graph
+            else if(this.incidenceMatrix.containsLoop())
+            {
+                return "0";
+            }
+
+            List<double> polynomial = new List<double>();
+
+            // stop adding polynomial terms when number of colors exceeds number of verticies in graph
+            for(int k = 1; k <= this.Vertices.Count(); ++k)
+            {
+                // polynomial term for k colors
+                List<double> cPolynomial = [1];
+
+                // calculate k factorial
+                double kFactorial = 1;
+                for (int i = 2; i < k; ++i)
+                    kFactorial *= k;
+
+                // coefficient for entire cPolynomial
+                double coefficient = getChromaticPolynomial(k)/kFactorial;
+
+                // multiply out k roots for 0 to k-1
+                for(int i = 0; i < k; ++i)
+                {
+                    List<double> multipledByK = new List<double>(cPolynomial);
+                    multipledByK.Insert(0, 0);
+
+                    // multiply each element by i then add to multipledByK
+                    for (int j = 0; j < cPolynomial.Count(); ++j)
+                    {
+                        multipledByK[j] -= cPolynomial[j] * i;
+                    }
+
+                    cPolynomial = multipledByK;
+                }
+
+                // add polynomial term to full polynomial.
+                for (int j = 0; j < cPolynomial.Count(); ++j)
+                {
+                    // increase polynomial size to accommodate more terms
+                    if (polynomial.Count() <= j)
+                        polynomial.Add(0);
+
+                    polynomial[j] += cPolynomial[j]*coefficient;
+                }
+            }
+
+            // convert polynomial to string
+            string polynomialString = "";
+            for(int i = 0; i < polynomial.Count; ++i)
+            {
+                if(polynomial[i] != 0)
+                {
+                    // add operator between terms
+                    if (polynomial[i] < 0)
+                    {
+                        polynomialString += "-";
+                    }
+                    else if(polynomialString != "")
+                    {
+                        polynomialString += "+";
+                    }
+
+                    polynomialString += Math.Abs(polynomial[i]) + "k^" + i;
+                }
+            }
+
+            return polynomialString;
         }
 
         // returns the number of ways to color this graph with k colors
