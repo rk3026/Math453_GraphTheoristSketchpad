@@ -9,6 +9,7 @@ using MathNet.Numerics.LinearAlgebra;
 using ScottPlot;
 using System.Windows.Controls;
 using System.Data;
+using Xceed.Wpf.Toolkit.Core.Converters;
 
 namespace GraphTheoristSketchpad.Logic
 {
@@ -56,6 +57,37 @@ namespace GraphTheoristSketchpad.Logic
         {
             this.vertices = vertices;
             this.matrix = matrix;
+        }
+
+        // replace underlying vertex list with one with equal size
+        public bool replaceVertexList(List<Vertex> vertices)
+        {
+            if(this.vertices.Count() == vertices.Count())
+            {
+                this.vertices = vertices;
+                return true;
+            }
+
+            return false;
+        }
+
+        public List<Vertex> getVertexList()
+        {
+            return new List<Vertex>(this.vertices);
+        }
+
+        public void addGraph(IncidenceMatrix matrix)
+        {
+            int originalRow = this.matrix.RowCount;
+            int originalCol = this.matrix.ColumnCount;
+            this.matrix = this.matrix.Resize(this.matrix.RowCount + matrix.matrix.RowCount, this.matrix.ColumnCount + matrix.matrix.ColumnCount);
+
+            this.matrix.SetSubMatrix(originalRow, originalCol, matrix.matrix);
+            
+            for(int i = 0; i < matrix.vertices.Count; ++i)
+            {
+                this.vertices.Add(matrix.vertices[i]);
+            }
         }
 
         public DataTable ToDataTable()
