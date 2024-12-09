@@ -72,12 +72,15 @@ namespace GraphTheoristSketchpad.Interface
             Style = SKPaintStyle.StrokeAndFill,
         };
 
+        private HashSet<CoordinateLine> bridges;
+
         public GraphRendererPlot()
         {
         }
 
         public void Render(RenderPack rp)
         {
+            bridges = new HashSet<CoordinateLine>(graph.GetBridges());
             DrawEdges(rp);
             DrawVerticesAndLabels(rp);
             DrawTemporaryLine(rp);
@@ -125,7 +128,6 @@ namespace GraphTheoristSketchpad.Interface
             return ScottPlot.Color.FromHSL(hue, 1f, lightness);
         }
 
-
         private void DrawEdges(RenderPack rp)
         {
             FillStyle FillStyle = new();
@@ -149,11 +151,6 @@ namespace GraphTheoristSketchpad.Interface
                     sameEdges.Add(edge, 1);
                 }
             }
-
-            // Check if bridges should be displayed
-            HashSet<CoordinateLine> bridges = IsDisplayingBridgesAndLinks
-                ? new HashSet<CoordinateLine>(graph.GetBridges())
-                : new HashSet<CoordinateLine>();
 
             // Draw edges
             foreach (CoordinateLine edge in sameEdges.Keys)

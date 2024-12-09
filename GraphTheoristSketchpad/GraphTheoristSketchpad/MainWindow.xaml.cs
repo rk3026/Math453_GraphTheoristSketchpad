@@ -263,8 +263,7 @@ namespace GraphTheoristSketchpad
 
                     if (dijkstraStartVertex != null && dijkstraEndVertex != null)
                     {
-                        // Now you can use the actual Vertex objects in your algorithm
-                        // Call your Dijkstra's algorithm with dijkstraStartVertex and dijkstraEndVertex
+                        //List<CoordinateLine> dijkstraPath = graphRendererPlot.graph.GetDijkstraPath(dijkstraStartVertex, dijkstraEndVertex);
                     }
                     break;
 
@@ -278,7 +277,7 @@ namespace GraphTheoristSketchpad
 
                     if (fordSourceVertex != null && fordSinkVertex != null)
                     {
-                        // Call Ford-Fulkerson algorithm with fordSourceVertex and fordSinkVertex
+                        //List<CoordinateLine> fordFulkersonPath = graphRendererPlot.graph.GetFordFulkersonPath(fordSourceVertex, fordSinkVertex);
                     }
                     break;
 
@@ -288,7 +287,11 @@ namespace GraphTheoristSketchpad
 
                     if (spanningTreeRootVertex != null)
                     {
-                        // Call Spanning Tree algorithm with spanningTreeRootVertex
+                        //List<CoordinateLine> spanningTree = graphRendererPlot.graph.GetMinimumSpanningTree(spanningTreeRootVertex);
+                    }
+                    else
+                    {
+                        //List<CoordinateLine> spanningTree = graphRendererPlot.graph.GetMinimumSpanningTree();
                     }
                     break;
             }

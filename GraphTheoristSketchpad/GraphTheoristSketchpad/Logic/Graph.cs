@@ -517,14 +517,23 @@ namespace GraphTheoristSketchpad.Logic
             // Get the current count of connected components
             int originalComponentCount = GetComponentCount();
 
-            // Temporarily remove the edge
-            RemoveEdge(edge);
+            // Temporarily remove the edge (DO NOT USE REMOVE EDGE FUNCTION OR GRAPHCHANGED WILL BE CALLED)
+            Vertex? start = getNearestVertex(edge.Start, 1);
+            Vertex? end = getNearestVertex(edge.End, 1);
+            if (start == null || end == null)
+            {
+                return false;
+            }
+
+            incidenceMatrix.RemoveEdge(start, end);
 
             // Recalculate the number of connected components
             int newComponentCount = GetComponentCount();
 
+            // Add the edge back
+            incidenceMatrix.AddEdge(start, end);
+
             // Restore the edge
-            AddEdge(getNearestVertex(edge.Start), getNearestVertex(edge.End));
 
             // If the component count increased, the edge is a bridge
             return newComponentCount > originalComponentCount;
