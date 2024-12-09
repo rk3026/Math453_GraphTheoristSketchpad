@@ -94,6 +94,15 @@ namespace GraphTheoristSketchpad.Logic
             return dt;
         }
 
+        //DEBUG TEST FUNCTION
+        public DataTable GetIncidenceMatrixTable(Vertex v)
+        {
+            // Get the DataTable from the incidence matrix
+            DataTable dt = incidenceMatrix.getComponentMatrixOf(v).ToDataTable();
+
+            return dt;
+        }
+
         // returns ordered list representing shortest path calculate with Dijkstra's algorithm
         public List<KeyValuePair<Vertex, Vertex>>? shortestPath(Vertex start, Vertex end)
         {

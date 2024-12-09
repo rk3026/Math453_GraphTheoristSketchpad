@@ -52,6 +52,12 @@ namespace GraphTheoristSketchpad.Logic
             matrix = CreateMatrix.Sparse<double>(0,0);
         }
 
+        private IncidenceMatrix(Matrix<double> matrix, List<Vertex> vertices)
+        {
+            this.vertices = vertices;
+            this.matrix = matrix;
+        }
+
         public DataTable ToDataTable()
         {
             DataTable table = new DataTable();
@@ -235,6 +241,75 @@ namespace GraphTheoristSketchpad.Logic
             }
 
             return incidentEdges.ToArray();
+        }
+
+        // returns the incidence matrix for component containing v
+        public IncidenceMatrix getComponentMatrixOf(Vertex v)
+        {
+            ISet<Vertex> vComponent = getComponentOf(v);
+
+            // vertices to be removed from incidince matrix to form one for component
+            IEnumerable<Vertex> excludedVertices = vertices.Except(vComponent);
+
+            Matrix<double> componentMatrix = this.matrix.Clone();
+
+            List<int> rowsToRemove = new List<int>();
+
+            foreach(Vertex excludedVertex in excludedVertices)
+            {
+                // excluded vertex index
+                int eVIndex = vertices.IndexOf(excludedVertex);
+                rowsToRemove.Add(eVIndex);
+
+                Vector<double> eVRow = componentMatrix.Row(eVIndex);
+
+                for(int c = eVRow.Count()-1; c >= 0; --c)
+                {
+                    // remove all edges on excluded vertex
+                    if (eVRow[c] != 0)
+                    {
+                        componentMatrix = componentMatrix.RemoveColumn(c);
+                    }
+                }
+            }
+
+            //remove rows from bottom up to prevent changing index of rows to remove
+            rowsToRemove.Sort();
+            for(int i = rowsToRemove.Count()-1; i >=0; --i)
+            {
+                componentMatrix = componentMatrix.RemoveRow(rowsToRemove[i]);
+            }
+
+            IncidenceMatrix componentIMatrix = new IncidenceMatrix(componentMatrix, new List<Vertex>(vComponent));
+
+            return componentIMatrix;
+        }
+
+        // returns set of vertices representing the component
+        public ISet<Vertex> getComponentOf(Vertex v)
+        {
+            ISet<Vertex> component = new HashSet<Vertex>();
+
+            ISet<Vertex> visited = new HashSet<Vertex>();
+
+            component.Add(v);
+
+            // stop when all vertices in component have been visited
+            while(!component.Equals(visited))
+            {
+                component = new HashSet<Vertex>(component.Union(getNeighborsOf(v)));
+                visited.Add(v);
+
+                // get next vertex in component that has not been visited
+                ISet<Vertex> leftovers = new HashSet<Vertex>(component);
+                leftovers.ExceptWith(visited);
+                if (leftovers.Count() != 0)
+                    v = leftovers.First();
+                else
+                    break;
+            }
+
+            return component;
         }
 
         // returns array of neighbors of v
