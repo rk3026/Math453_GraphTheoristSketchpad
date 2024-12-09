@@ -645,6 +645,5 @@ namespace GraphTheoristSketchpad.Logic
             return new List<HashSet<Vertex>> { setA, setB };
         }
 
-
     }
 }
