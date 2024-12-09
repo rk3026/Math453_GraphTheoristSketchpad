@@ -54,6 +54,62 @@ namespace GraphTheoristSketchpad.Logic
             return true;
         }
 
+        public void CartesianProduct(Vertex v1, Vertex v2)
+        {
+            IncidenceMatrix v1Component = this.incidenceMatrix.getComponentMatrixOf(v1);
+            IncidenceMatrix v2Component = this.incidenceMatrix.getComponentMatrixOf(v2);
+
+            List<Vertex> v1Vertices = v1Component.getVertexList();
+            List<Vertex> v2Vertices = v2Component.getVertexList();
+
+            // v1 vertex to component
+            Dictionary<Vertex, List<Vertex>> v1ToComponent = new Dictionary<Vertex, List<Vertex>>();
+            IncidenceMatrix totalComponent = new IncidenceMatrix();
+
+            for(int i = 0; i < v1Vertices.Count(); ++i)
+            {
+                Vertex v1ComponentV = v1Vertices[i];
+
+                IncidenceMatrix newComponent = this.incidenceMatrix.getComponentMatrixOf(v2);
+
+                List<Vertex> newVertices = newComponent.getVertexList();
+
+                for(int j = 0; j < newVertices.Count(); ++j)
+                {
+                    Vertex v2ComponentV = newVertices[j];
+                    newVertices[i] = new Vertex((v1ComponentV.Location.X + v2ComponentV.Location.X)/2, (v1ComponentV.Location.Y + v2ComponentV.Location.Y) / 2);
+                    newVertices[i].Label = v1ComponentV.Label + v2ComponentV.Label;
+                }
+
+                v1ToComponent[v1ComponentV] = newVertices;
+                newComponent.replaceVertexList(newVertices);
+                totalComponent.addGraph(newComponent);
+            }
+
+            foreach(Vertex v in v1ToComponent.Keys)
+            {
+                ISet<Vertex> v1ComponentNeighbors = v1Component.getNeighborsOf(v);
+
+                List<Vertex> vList = v1ToComponent[v];
+
+                foreach(Vertex n in v1ComponentNeighbors)
+                {
+                    List<Vertex> nList = v1ToComponent[n];
+                    for (int i = 0; i < vList.Count(); ++i)
+                    {
+                        totalComponent.AddEdge(vList[i], nList[i]);
+                    }
+                }
+            }
+
+            this.incidenceMatrix = totalComponent;
+            this.Vertices.Clear();
+            foreach(Vertex v in totalComponent.getVertexList())
+            {
+                this.Vertices.Add(v);
+            }
+        }
+
         public DataTable GetIncidenceMatrixTable()
         {
             // Get the DataTable from the incidence matrix
@@ -94,7 +150,7 @@ namespace GraphTheoristSketchpad.Logic
             return dt;
         }
 
-        //DEBUG TEST FUNCTION
+        //Get incidence table for component containing v
         public DataTable GetIncidenceMatrixTable(Vertex v)
         {
             // Get the DataTable from the incidence matrix
