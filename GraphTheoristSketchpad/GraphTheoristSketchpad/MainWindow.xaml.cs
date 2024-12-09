@@ -166,6 +166,8 @@ namespace GraphTheoristSketchpad
             FordSourceNodeSelector.Items.Clear();
             FordSinkNodeSelector.Items.Clear();
             SpanningTreeRootNodeSelector.Items.Clear();
+            CartesianProduct1stComponentSelector.Items.Clear();
+            CartesianProduct2ndComponentSelector.Items.Clear();
 
             // Get the list of vertices from the graph
             List<Vertex> vertices = graphRendererPlot.graph.Vertices.ToList();
@@ -189,6 +191,12 @@ namespace GraphTheoristSketchpad
 
                 var rootItem = new ComboBoxItem { Content = vertex.Label, Tag = vertex };
                 SpanningTreeRootNodeSelector.Items.Add(rootItem);
+
+                var component1Item = new ComboBoxItem { Content = vertex.Label, Tag = vertex };
+                CartesianProduct1stComponentSelector.Items.Add(component1Item);
+
+                var component2Item = new ComboBoxItem { Content = vertex.Label, Tag = vertex };
+                CartesianProduct2ndComponentSelector.Items.Add(component2Item);
             }
         }
 
@@ -326,6 +334,7 @@ namespace GraphTheoristSketchpad
                     var cartesian1stComponentVertex = cartesianStartItem?.Tag as Vertex;
                     var cartesian2ndComponentVertex = cartesianEndItem?.Tag as Vertex;
 
+                    graphRendererPlot.graph.CartesianProduct(cartesian1stComponentVertex, cartesian2ndComponentVertex);
 
                     break;
                 default:
