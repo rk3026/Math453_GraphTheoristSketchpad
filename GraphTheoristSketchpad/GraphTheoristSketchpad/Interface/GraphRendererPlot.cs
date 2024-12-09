@@ -1,6 +1,8 @@
 ﻿using GraphTheoristSketchpad.Logic;
 using ScottPlot;
 using SkiaSharp;
+using System.Collections.Generic;
+using System.Linq.Expressions;
 
 namespace GraphTheoristSketchpad.Interface
 {
@@ -18,6 +20,7 @@ namespace GraphTheoristSketchpad.Interface
         public bool IsKColoring { get; set; } = false;
         public int KColoringNumber { get; set; } = 0;
         public bool KColoringSuccessful { get; private set; } = true;
+        public List<KeyValuePair<Vertex, Vertex>>? DijkstraPath { get; set; } = new List<KeyValuePair<Vertex, Vertex>>();
         public IAxes Axes { get; set; } = new Axes();
         public IEnumerable<LegendItem> LegendItems => LegendItem.None;
         public AxisLimits GetAxisLimits() => AxisLimits.Default;
@@ -72,6 +75,14 @@ namespace GraphTheoristSketchpad.Interface
             Style = SKPaintStyle.StrokeAndFill,
         };
 
+        public SKPaint algorithmPathPaint = new SKPaint
+        {
+            Color = SKColors.BlueViolet.WithAlpha(130),
+            IsAntialias = true,
+            StrokeWidth = 2,
+            Style = SKPaintStyle.Stroke,
+        };
+
         private HashSet<CoordinateLine> bridges;
 
         public GraphRendererPlot()
@@ -84,6 +95,30 @@ namespace GraphTheoristSketchpad.Interface
             DrawEdges(rp);
             DrawVerticesAndLabels(rp);
             DrawTemporaryLine(rp);
+        }
+
+        public void DrawAlgorithmPath(RenderPack rp)
+        {
+            if (DijkstraPath==null) { return; }
+            SKPaint algorithmPathP = algorithmPathPaint;
+
+            foreach (KeyValuePair<Vertex,Vertex> keyValPair in DijkstraPath)
+            {
+                CoordinateLine cl = new CoordinateLine(keyValPair.Key.Location, keyValPair.Value.Location);
+                PixelLine pixelEdge = Axes.GetPixelLine(cl);
+
+                SKPaint currentPaint;
+                currentPaint = algorithmPathP;
+
+                Pixel start = pixelEdge.Pixel1;
+                Pixel end = pixelEdge.Pixel2;
+
+                SKPath path = new SKPath();
+                path.MoveTo(start.X, start.Y);
+                path.LineTo(new SKPoint(end.X, end.Y));
+
+                rp.Canvas.DrawPath(path, currentPaint);
+            }
         }
 
         public void PerformKColoring()
@@ -134,6 +169,7 @@ namespace GraphTheoristSketchpad.Interface
             SKPaint edgeP = edgePaint;
             SKPaint linkP = linkPaint;
             SKPaint bridgeP = bridgePaint;
+            SKPaint algorithmPathP = algorithmPathPaint;
 
             // Get all edges
             CoordinateLine[] edges = graph.getEdges();
@@ -155,6 +191,14 @@ namespace GraphTheoristSketchpad.Interface
             // Draw edges
             foreach (CoordinateLine edge in sameEdges.Keys)
             {
+                List<CoordinateLine> dijkstraPath = new List<CoordinateLine>();
+                foreach (KeyValuePair<Vertex,Vertex> keyValPair in DijkstraPath)
+                {
+                    CoordinateLine cl = new CoordinateLine(keyValPair.Key.Location, keyValPair.Value.Location);
+                    dijkstraPath.Add(cl);
+                }
+                
+
                 PixelLine pixelEdge = Axes.GetPixelLine(edge);
 
                 SKPaint currentPaint;
@@ -165,6 +209,12 @@ namespace GraphTheoristSketchpad.Interface
                 else
                 {
                     currentPaint = edgeP;
+                }
+
+                CoordinateLine revEdge = new CoordinateLine(edge.End, edge.Start);
+                if (dijkstraPath.Contains(edge) || (!graph.IsDirected && dijkstraPath.Contains(revEdge)))
+                {
+                    currentPaint = algorithmPathP;
                 }
 
                 // Edge is a loop

@@ -104,10 +104,240 @@ namespace GraphTheoristSketchpad.Logic
         }
 
         // returns ordered list representing shortest path calculate with Dijkstra's algorithm
-        public List<KeyValuePair<Vertex, Vertex>>? shortestPath(Vertex start, Vertex end)
+        public List<KeyValuePair<Vertex, Vertex>>? getShortestPath(Vertex start, Vertex end)
         {
+            // Dictionary to store the shortest distance from the start vertex to each vertex
+            Dictionary<Vertex, double> distances = new Dictionary<Vertex, double>();
+
+            // Dictionary to store the previous vertex on the shortest path to each vertex
+            Dictionary<Vertex, Vertex?> previous = new Dictionary<Vertex, Vertex?>();
+
+            // Priority queue to explore vertices with the smallest known distance
+            PriorityQueue<Vertex, double> priorityQueue = new PriorityQueue<Vertex, double>();
+
+            // Initialize distances and priority queue
+            foreach (var vertex in Vertices)
+            {
+                distances[vertex] = double.MaxValue;
+                previous[vertex] = null;
+            }
+            distances[start] = 0;
+            priorityQueue.Enqueue(start, 0);
+
+            while (priorityQueue.Count > 0)
+            {
+                // Get the vertex with the smallest distance
+                var currentVertex = priorityQueue.Dequeue();
+
+                // If we reached the destination, reconstruct the path
+                if (currentVertex.Equals(end))
+                {
+                    var path = new List<KeyValuePair<Vertex, Vertex>>();
+                    for (var at = end; at != null && previous[at] != null; at = previous[at])
+                    {
+                        path.Add(new KeyValuePair<Vertex, Vertex>(previous[at]!, at));
+                    }
+                    path.Reverse();
+                    return path;
+                }
+
+                // Skip if the current distance is greater than the known shortest distance
+                if (distances[currentVertex] == double.MaxValue)
+                    continue;
+
+                // Explore neighbors
+                var neighbors = incidenceMatrix.getNeighborsOf(currentVertex);
+                foreach (var neighbor in neighbors)
+                {
+                    List<double> weights = incidenceMatrix.getWeight(currentVertex, neighbor);
+                    double minWeight = weights.Min();
+                    double distanceThroughCurrent = distances[currentVertex] + minWeight;
+
+                    if (distanceThroughCurrent < distances[neighbor])
+                    {
+                        // Update the shortest distance and the path
+                        distances[neighbor] = distanceThroughCurrent;
+                        previous[neighbor] = currentVertex;
+                        priorityQueue.Enqueue(neighbor, distanceThroughCurrent);
+                    }
+                }
+            }
+
+            // If we reach here, there's no path from start to end
             return null;
         }
+
+        // Returns the maximum flow from start to end using the Ford-Fulkerson algorithm
+        public double GetMaxFlow(Vertex start, Vertex end)
+        {
+            // Initialize the residual graph with the same vertices and edges as the original graph
+            Dictionary<CoordinateLine, double> residualGraph = new Dictionary<CoordinateLine, double>();
+
+            foreach (CoordinateLine edge in incidenceMatrix.getEdges())
+            {
+                var startVertex = getNearestVertex(edge.Start);
+                var endVertex = getNearestVertex(edge.End);
+
+                // Sum up the weights for this edge
+                residualGraph[edge] = incidenceMatrix.getWeight(startVertex, endVertex).Sum();
+
+                // Add reverse edge with initial capacity 0 if not already present
+                var reverseEdge = new CoordinateLine(edge.End, edge.Start);
+                if (!residualGraph.ContainsKey(reverseEdge))
+                {
+                    residualGraph[reverseEdge] = 0;
+                }
+            }
+
+            double maxFlow = 0;
+
+            while (true)
+            {
+                // Find an augmenting path using BFS
+                var augmentingPath = FindAugmentingPath(start, end, residualGraph);
+                if (augmentingPath == null) break; // No more augmenting paths
+
+                // Find the minimum capacity (bottleneck) in the augmenting path
+                double pathFlow = double.MaxValue;
+                for (int i = 0; i < augmentingPath.Count - 1; i++)
+                {
+                    var u = augmentingPath[i];
+                    var v = augmentingPath[i + 1];
+                    var edge = new CoordinateLine(u.Location, v.Location);
+                    pathFlow = Math.Min(pathFlow, residualGraph[edge]);
+                }
+
+                // Update the residual capacities in the graph
+                for (int i = 0; i < augmentingPath.Count - 1; i++)
+                {
+                    var u = augmentingPath[i];
+                    var v = augmentingPath[i + 1];
+                    var edge = new CoordinateLine(u.Location, v.Location);
+                    var reverseEdge = new CoordinateLine(v.Location, u.Location);
+
+                    residualGraph[edge] -= pathFlow;
+                    residualGraph[reverseEdge] += pathFlow; // Update reverse edge for the flow
+                }
+
+                // Add path flow to the total max flow
+                maxFlow += pathFlow;
+            }
+
+            return maxFlow;
+        }
+
+        // Helper function: Find an augmenting path using BFS
+        private List<Vertex>? FindAugmentingPath(Vertex start, Vertex end, Dictionary<CoordinateLine, double> residualGraph)
+        {
+            Queue<Vertex> queue = new Queue<Vertex>();
+            Dictionary<Vertex, Vertex?> parent = new Dictionary<Vertex, Vertex?>();
+
+            queue.Enqueue(start);
+            parent[start] = null;
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+
+                if (current.Equals(end))
+                {
+                    // Reconstruct the augmenting path
+                    var path = new List<Vertex>();
+                    for (var v = end; v != null; v = parent[v])
+                    {
+                        path.Add(v);
+                    }
+                    path.Reverse();
+                    return path;
+                }
+
+                foreach (var neighbor in incidenceMatrix.getNeighborsOf(current))
+                {
+                    var edge = new CoordinateLine(current.Location, neighbor.Location);
+                    if (!parent.ContainsKey(neighbor) && residualGraph[edge] > 0) // Valid path with capacity > 0
+                    {
+                        parent[neighbor] = current;
+                        queue.Enqueue(neighbor);
+                    }
+                }
+            }
+
+            return null; // No augmenting path found
+        }
+
+        public List<KeyValuePair<Vertex, Vertex>> GetSpanningTreeWithRoot(Vertex root)
+        {
+            List<KeyValuePair<Vertex, Vertex>> spanningTreeEdges = new List<KeyValuePair<Vertex, Vertex>>();
+            HashSet<Vertex> visited = new HashSet<Vertex>();
+
+            void DFS(Vertex current)
+            {
+                visited.Add(current);
+
+                var neighbors = incidenceMatrix.getNeighborsOf(current);
+                foreach (var neighbor in neighbors)
+                {
+                    if (!visited.Contains(neighbor))
+                    {
+                        spanningTreeEdges.Add(new KeyValuePair<Vertex, Vertex>(current, neighbor));
+                        DFS(neighbor);
+                    }
+                }
+            }
+
+            DFS(root);
+            return spanningTreeEdges;
+        }
+
+        public List<KeyValuePair<Vertex, Vertex>> GetSpanningTree()
+        {
+            List<KeyValuePair<Vertex, Vertex>> spanningTreeEdges = new List<KeyValuePair<Vertex, Vertex>>();
+            HashSet<Vertex> visited = new HashSet<Vertex>();
+            PriorityQueue<(Vertex, Vertex, double), double> edgeQueue = new PriorityQueue<(Vertex, Vertex, double), double>();
+
+            // Start from an arbitrary vertex (e.g., the first one in the graph)
+            Vertex start = Vertices.First();
+            visited.Add(start);
+
+            // Add all edges from the starting vertex to the priority queue
+            var neighbors = incidenceMatrix.getNeighborsOf(start);
+            foreach (var neighbor in neighbors)
+            {
+                double weight = incidenceMatrix.getWeight(start, neighbor).Min();
+                edgeQueue.Enqueue((start, neighbor, weight), weight);
+            }
+
+            while (edgeQueue.Count > 0)
+            {
+                // Get the edge with the smallest weight
+                var (u, v, w) = edgeQueue.Dequeue();
+
+                // Skip if both vertices are already in the spanning tree
+                if (visited.Contains(u) && visited.Contains(v))
+                    continue;
+
+                // Add the edge to the spanning tree
+                spanningTreeEdges.Add(new KeyValuePair<Vertex, Vertex>(u, v));
+
+                // Add the new vertex to the visited set
+                Vertex newVertex = visited.Contains(u) ? v : u;
+                visited.Add(newVertex);
+
+                // Add all edges from the new vertex to the priority queue
+                neighbors = incidenceMatrix.getNeighborsOf(newVertex);
+                foreach (var neighbor in neighbors)
+                {
+                    if (!visited.Contains(neighbor))
+                    {
+                        double weight = incidenceMatrix.getWeight(newVertex, neighbor).Min();
+                        edgeQueue.Enqueue((newVertex, neighbor, weight), weight);
+                    }
+                }
+            }
+
+            return spanningTreeEdges;
+        }
+
 
         // returns Dictionary of coloring if this graph can be colored by k colors
         public Dictionary<Vertex, int>? colorableBy(int k)

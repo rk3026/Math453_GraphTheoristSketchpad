@@ -544,6 +544,29 @@ namespace GraphTheoristSketchpad.Logic
             return this.matrix.ColumnCount;
         }
 
+        public List<double> getWeight(Vertex start, Vertex end)
+        {
+            List<double> weights = new List<double>();
+
+            Vector<double> startRow = this.matrix.Row(this.vertices.IndexOf(start));
+
+            Vector<double> endRow = this.matrix.Row(this.vertices.IndexOf(end));
+
+            for(int i = 0; i < startRow.Count(); ++i)
+            {
+                if (startRow[i] != 0 && endRow[i] != 0)
+                {
+                    // check if start row is head of edge/arc
+                    if(startRow[i] > 0)
+                    {
+                        weights.Add(startRow[i]);
+                    }
+                }
+            }
+
+            return weights;
+        }
+
         public void Clear()
         {
             this.vertices.Clear();

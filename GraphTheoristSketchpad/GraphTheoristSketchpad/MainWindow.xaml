@@ -213,7 +213,8 @@
                                     <ComboBox Name="AlgorithmSelector" Width="250" Margin="0,0,0,10" SelectionChanged="AlgorithmList_SelectionChanged">
                                         <ComboBoxItem>Dijkstra's Algorithm</ComboBoxItem>
                                         <ComboBoxItem>Ford-Fulkerson (Max Flow)</ComboBoxItem>
-                                        <ComboBoxItem>Spanning Tree Construction</ComboBoxItem>
+                                        <ComboBoxItem>Minimum Spanning Tree</ComboBoxItem>
+                                        <ComboBoxItem>Cartesian Product</ComboBoxItem>
                                     </ComboBox>
 
                                     <!-- Input Parameters -->
@@ -233,6 +234,7 @@
                                             <ComboBox Name="FordSourceNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
                                             <TextBlock Text="Sink Node:" Margin="0,5,0,2" />
                                             <ComboBox Name="FordSinkNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
+                                            <Label Content="Max Flow: " Name="FordFulkersonMaxFlowLabel" Margin="0,0,0,10" />
                                         </StackPanel>
 
                                         <!-- Spanning Tree Parameters -->
@@ -240,12 +242,19 @@
                                             <TextBlock Text="Select Root Node (Optional):" Margin="0,5,0,2" />
                                             <ComboBox Name="SpanningTreeRootNodeSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
                                         </StackPanel>
-
+                                        
+                                        <!-- Cartesian Product Parameters -->
+                                        <StackPanel Name="CartesianProductInputs" Visibility="Collapsed">
+                                            <TextBlock Text="Node From 1st Component:" Margin="0,5,0,2" />
+                                            <ComboBox Name="CartesianProduct1stComponentSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
+                                            <TextBlock Text="Node From 2nd Component:" Margin="0,5,0,2" />
+                                            <ComboBox Name="CartesianProduct2ndComponentSelector" Width="200" Margin="0,0,0,10" SelectionChanged="OnComboBoxSelectionChanged"/>
+                                        </StackPanel>
 
                                     </StackPanel>
 
                                     <!-- Run Button -->
-                                    <Button Content="Run Algorithm" Name="RunAlgorithmButton" Width="150" Margin="0,10,0,10" Click="OnRunAlgorithmClicked" />
+                                    <CheckBox Content="Run Algorithm" Name="RunAlgorithmButton" Width="150" Margin="0,10,0,10" Checked="OnRunAlgorithmChecked" Unchecked="OnRunAlgorithmUnchecked" />
 
                                 </StackPanel>
                             </Expander>

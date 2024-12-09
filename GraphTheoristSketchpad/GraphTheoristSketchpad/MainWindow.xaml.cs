@@ -152,6 +152,7 @@ namespace GraphTheoristSketchpad
 
             // Update the algorithm selectors
             UpdateAlgorithmSelectors();
+            RunAlgorithmButton.IsChecked = false;
 
             // Refresh the graph view
             GraphView.Refresh();
@@ -169,6 +170,7 @@ namespace GraphTheoristSketchpad
             // Get the list of vertices from the graph
             List<Vertex> vertices = graphRendererPlot.graph.Vertices.ToList();
 
+            SpanningTreeRootNodeSelector.Items.Add(new ComboBoxItem { Content = "None" });
             // Populate the selectors with the updated vertices
             foreach (var vertex in vertices)
             {
@@ -193,6 +195,7 @@ namespace GraphTheoristSketchpad
         // Event handler for ComboBox selection change
         private void OnComboBoxSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            RunAlgorithmButton.IsChecked = false;
             var comboBox = sender as ComboBox;
             if (comboBox == null || comboBox.SelectedItem == null) return;
 
@@ -227,6 +230,8 @@ namespace GraphTheoristSketchpad
             DijkstraInputs.Visibility = Visibility.Collapsed;
             FordFulkersonInputs.Visibility = Visibility.Collapsed;
             SpanningTreeInputs.Visibility = Visibility.Collapsed;
+            CartesianProductInputs.Visibility = Visibility.Collapsed;
+            RunAlgorithmButton.IsChecked = false;
 
             // Get the selected algorithm from the ComboBox
             var selectedAlgorithm = (AlgorithmSelector.SelectedItem as ComboBoxItem)?.Content.ToString();
@@ -241,19 +246,23 @@ namespace GraphTheoristSketchpad
                 case "Ford-Fulkerson (Max Flow)":
                     FordFulkersonInputs.Visibility = Visibility.Visible;
                     break;
-                case "Spanning Tree Construction":
+                case "Minimum Spanning Tree":
                     SpanningTreeInputs.Visibility = Visibility.Visible;
+                    break;
+                case "Cartesian Product":
+                    CartesianProductInputs.Visibility = Visibility.Visible;
                     break;
             }
         }
 
 
-        private void OnRunAlgorithmClicked(object sender, RoutedEventArgs e)
+        private void OnRunAlgorithmChecked(object sender, RoutedEventArgs e)
         {
             var selectedAlgorithm = (AlgorithmSelector.SelectedItem as ListBoxItem)?.Content.ToString();
             switch (selectedAlgorithm)
             {
                 case "Dijkstra's Algorithm":
+
                     var dijkstraStartItem = DijkstraStartNodeSelector.SelectedItem as ComboBoxItem;
                     var dijkstraEndItem = DijkstraEndNodeSelector.SelectedItem as ComboBoxItem;
 
@@ -263,11 +272,16 @@ namespace GraphTheoristSketchpad
 
                     if (dijkstraStartVertex != null && dijkstraEndVertex != null)
                     {
-                        //List<CoordinateLine> dijkstraPath = graphRendererPlot.graph.GetDijkstraPath(dijkstraStartVertex, dijkstraEndVertex);
+                        List<KeyValuePair<Vertex,Vertex>>? dijkstraPath = graphRendererPlot.graph.getShortestPath(dijkstraStartVertex, dijkstraEndVertex);
+                        graphRendererPlot.DijkstraPath.Clear();
+                        foreach(KeyValuePair<Vertex,Vertex> vertexPair in dijkstraPath)
+                        {
+                            graphRendererPlot.DijkstraPath.Add(vertexPair);
+                        }
                     }
                     break;
 
-                case "Ford-Fulkerson":
+                case "Ford-Fulkerson (Max Flow)":
                     var fordSourceItem = FordSourceNodeSelector.SelectedItem as ComboBoxItem;
                     var fordSinkItem = FordSinkNodeSelector.SelectedItem as ComboBoxItem;
 
@@ -277,7 +291,7 @@ namespace GraphTheoristSketchpad
 
                     if (fordSourceVertex != null && fordSinkVertex != null)
                     {
-                        //List<CoordinateLine> fordFulkersonPath = graphRendererPlot.graph.GetFordFulkersonPath(fordSourceVertex, fordSinkVertex);
+                        FordFulkersonMaxFlowLabel.Content = "Max Flow from " + fordSourceVertex.Label + " to " + fordSinkVertex.Label + ": " + graphRendererPlot.graph.GetMaxFlow(fordSourceVertex, fordSinkVertex);
                     }
                     break;
 
@@ -287,15 +301,46 @@ namespace GraphTheoristSketchpad
 
                     if (spanningTreeRootVertex != null)
                     {
-                        //List<CoordinateLine> spanningTree = graphRendererPlot.graph.GetMinimumSpanningTree(spanningTreeRootVertex);
+                        List<KeyValuePair<Vertex, Vertex>>? spanningTree = graphRendererPlot.graph.GetSpanningTreeWithRoot(spanningTreeRootVertex);
+                        graphRendererPlot.DijkstraPath.Clear();
+                        foreach (KeyValuePair<Vertex, Vertex> vertexPair in spanningTree)
+                        {
+                            graphRendererPlot.DijkstraPath.Add(vertexPair);
+                        }
                     }
                     else
                     {
-                        //List<CoordinateLine> spanningTree = graphRendererPlot.graph.GetMinimumSpanningTree();
+                        List<KeyValuePair<Vertex, Vertex>>? spanningTree = graphRendererPlot.graph.GetSpanningTree();
+                        graphRendererPlot.DijkstraPath.Clear();
+                        foreach (KeyValuePair<Vertex, Vertex> vertexPair in spanningTree)
+                        {
+                            graphRendererPlot.DijkstraPath.Add(vertexPair);
+                        }
                     }
                     break;
+                case "Cartesian Product":
+                    var cartesianStartItem = CartesianProduct1stComponentSelector.SelectedItem as ComboBoxItem;
+                    var cartesianEndItem = CartesianProduct2ndComponentSelector.SelectedItem as ComboBoxItem;
+
+                    // Get the actual Vertex objects
+                    var cartesian1stComponentVertex = cartesianStartItem?.Tag as Vertex;
+                    var cartesian2ndComponentVertex = cartesianEndItem?.Tag as Vertex;
+
+
+                    break;
+                default:
+                    break;
             }
+            GraphView.Refresh();
+
         }
+
+        private void OnRunAlgorithmUnchecked(object sender, RoutedEventArgs e)
+        {
+            graphRendererPlot.DijkstraPath.Clear();
+            GraphView.Refresh();
+        }
+
 
 
 
