@@ -121,6 +121,8 @@ namespace GraphTheoristSketchpad.Logic
             {
                 this.Vertices.Add(v);
             }
+
+            OnGraphChanged();
         }
 
         public DataTable GetIncidenceMatrixTable()
