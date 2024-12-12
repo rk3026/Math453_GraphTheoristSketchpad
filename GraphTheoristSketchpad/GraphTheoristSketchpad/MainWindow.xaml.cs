@@ -692,7 +692,7 @@ namespace GraphTheoristSketchpad
                 graphRendererPlot.graph.RemoveVertex(nearestVertex);
             }
 
-            CoordinateLine? nearestEdge = graphRendererPlot.graph.getNearestEdge(location,1);
+            CoordinateLine? nearestEdge = graphRendererPlot.graph.getNearestEdge(location, vectorSelectDist);
             if (nearestEdge != null)
             {
                 graphRendererPlot.graph.RemoveEdge((CoordinateLine)nearestEdge);
