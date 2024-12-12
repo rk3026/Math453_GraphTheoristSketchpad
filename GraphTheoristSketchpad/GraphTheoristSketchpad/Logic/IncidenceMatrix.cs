@@ -60,15 +60,17 @@ namespace GraphTheoristSketchpad.Logic
         }
 
         // replace underlying vertex list with one with equal size
-        public bool replaceVertexList(List<Vertex> vertices)
+        public void replaceVertexList(List<Vertex> vertices)
         {
             if(this.vertices.Count() == vertices.Count())
             {
                 this.vertices = vertices;
-                return true;
             }
-
-            return false;
+            else
+            {
+                throw new ArgumentException("vertex lists don't match in size");
+            }
+            
         }
 
         public List<Vertex> getVertexList()
@@ -183,6 +185,7 @@ namespace GraphTheoristSketchpad.Logic
 
         public void RemoveEdge(Vertex start, Vertex end)
         {
+            bool isLoop = start == end;
             int startIndex = vertices.IndexOf(start);
             int endIndex = vertices.IndexOf(end);
             Vector<double> startRow = this.matrix.Row(startIndex);
@@ -193,8 +196,20 @@ namespace GraphTheoristSketchpad.Logic
             {
                 if (startRow[i] != 0 && endRow[i] != 0)
                 {
-                    this.matrix = this.matrix.RemoveColumn(i);
-                    break;
+                    if (isLoop)
+                    {
+                        // remove only if edge at column i is a loop
+                        if(this.matrix.Column(i).Sum() == startRow[i])
+                        {
+                            this.matrix = this.matrix.RemoveColumn(i);
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        this.matrix = this.matrix.RemoveColumn(i);
+                        break;
+                    }
                 }
             }
         }

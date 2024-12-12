@@ -66,29 +66,39 @@ namespace GraphTheoristSketchpad.Logic
             Dictionary<Vertex, List<Vertex>> v1ToComponent = new Dictionary<Vertex, List<Vertex>>();
             IncidenceMatrix totalComponent = new IncidenceMatrix();
 
+            // duplicate v2 component for every v1 component vertex
             for(int i = 0; i < v1Vertices.Count(); ++i)
             {
                 Vertex v1ComponentV = v1Vertices[i];
 
                 IncidenceMatrix newComponent = this.incidenceMatrix.getComponentMatrixOf(v2);
 
-                List<Vertex> newVertices = newComponent.getVertexList();
+                List<Vertex> newVertices = new List<Vertex>();
 
-                for(int j = 0; j < newVertices.Count(); ++j)
+                //duplicate v2 component to v1ComponentV
+                for(int j = 0; j < v2Vertices.Count(); ++j)
                 {
-                    Vertex v2ComponentV = newVertices[j];
-                    newVertices[i] = new Vertex((v1ComponentV.Location.X + v2ComponentV.Location.X)/2, (v1ComponentV.Location.Y + v2ComponentV.Location.Y) / 2);
-                    newVertices[i].Label = v1ComponentV.Label + v2ComponentV.Label;
+                    Vertex v2ComponentV = v2Vertices[j];
+                    Vertex newVertex = new Vertex(
+                        (v1ComponentV.Location.X + v2ComponentV.Location.X) / 2,
+                        (v1ComponentV.Location.Y + v2ComponentV.Location.Y) / 2);
+                    newVertex.Label = v1ComponentV.Label + v2ComponentV.Label;
+
+                    newVertices.Add(newVertex);
                 }
 
+                //add duplicated component to total component incidence matrix
                 v1ToComponent[v1ComponentV] = newVertices;
                 newComponent.replaceVertexList(newVertices);
                 totalComponent.addGraph(newComponent);
             }
 
+            ISet<Vertex> visited = new HashSet<Vertex>();
+            // add edges between duplicated v2 components
             foreach(Vertex v in v1ToComponent.Keys)
             {
                 ISet<Vertex> v1ComponentNeighbors = v1Component.getNeighborsOf(v);
+                v1ComponentNeighbors.ExceptWith(visited);
 
                 List<Vertex> vList = v1ToComponent[v];
 
@@ -100,8 +110,11 @@ namespace GraphTheoristSketchpad.Logic
                         totalComponent.AddEdge(vList[i], nList[i]);
                     }
                 }
+
+                visited.Add(v);
             }
 
+            // replace graph matrix and vertices with those from cartesian product
             this.incidenceMatrix = totalComponent;
             this.Vertices.Clear();
             foreach(Vertex v in totalComponent.getVertexList())

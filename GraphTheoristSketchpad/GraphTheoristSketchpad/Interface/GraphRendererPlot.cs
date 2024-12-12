@@ -91,7 +91,8 @@ namespace GraphTheoristSketchpad.Interface
 
         public void Render(RenderPack rp)
         {
-            bridges = new HashSet<CoordinateLine>(graph.GetBridges());
+            if(IsDisplayingBridgesAndLinks)
+                bridges = new HashSet<CoordinateLine>(graph.GetBridges());
             DrawEdges(rp);
             DrawVerticesAndLabels(rp);
             DrawTemporaryLine(rp);
