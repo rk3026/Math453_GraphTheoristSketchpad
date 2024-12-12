@@ -93,18 +93,22 @@ namespace GraphTheoristSketchpad.Logic
                 totalComponent.addGraph(newComponent);
             }
 
-            ISet<Vertex> visited = new HashSet<Vertex>();
+
             // add edges between duplicated v2 components
-            foreach(Vertex v in v1ToComponent.Keys)
+            ISet<Vertex> visited = new HashSet<Vertex>();
+            foreach (Vertex v in v1ToComponent.Keys)
             {
                 ISet<Vertex> v1ComponentNeighbors = v1Component.getNeighborsOf(v);
                 v1ComponentNeighbors.ExceptWith(visited);
 
                 List<Vertex> vList = v1ToComponent[v];
 
+                // add edges from a component to each neighboring component
                 foreach(Vertex n in v1ComponentNeighbors)
                 {
                     List<Vertex> nList = v1ToComponent[n];
+
+                    // add all edges to a neighboring component
                     for (int i = 0; i < vList.Count(); ++i)
                     {
                         totalComponent.AddEdge(vList[i], nList[i]);

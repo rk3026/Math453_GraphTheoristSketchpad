@@ -327,7 +327,21 @@ namespace GraphTheoristSketchpad.Logic
                 componentMatrix = componentMatrix.RemoveRow(rowsToRemove[i]);
             }
 
-            IncidenceMatrix componentIMatrix = new IncidenceMatrix(componentMatrix, new List<Vertex>(vComponent));
+            // order component vertex set according to its order in this incidence matrix
+            SortedDictionary<int, Vertex> orderedVertices = new SortedDictionary<int, Vertex>();
+            foreach(Vertex vCompVert in vComponent)
+            {
+                orderedVertices.Add(this.vertices.IndexOf(vCompVert), vCompVert);
+            }
+
+            List<Vertex> componentIMatrixVerts = new List<Vertex>();
+            foreach (int index in orderedVertices.Keys)
+            {
+                componentIMatrixVerts.Add(this.vertices[index]);
+            }
+
+            IncidenceMatrix componentIMatrix =
+                new IncidenceMatrix(componentMatrix, componentIMatrixVerts);
 
             return componentIMatrix;
         }
@@ -359,7 +373,7 @@ namespace GraphTheoristSketchpad.Logic
             return component;
         }
 
-        // returns array of neighbors of v
+        // returns set of neighbors of v
         public ISet<Vertex> getNeighborsOf(Vertex v)
         {
             // row of vertex v
