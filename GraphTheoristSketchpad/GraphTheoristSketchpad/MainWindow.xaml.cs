@@ -869,6 +869,7 @@ namespace GraphTheoristSketchpad
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
             graphRendererPlot.Clear();
+            UpdateSelectionMarkers();
             UpdateGraphInfoUI(null, null);
             GraphView.Refresh();
         }
