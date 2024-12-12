@@ -293,6 +293,13 @@ namespace GraphTheoristSketchpad.Logic
         // returns the incidence matrix for component containing v
         public IncidenceMatrix getComponentMatrixOf(Vertex v)
         {
+            // if v has no connections, then it's the entire component
+            if(this.vertices.IndexOf(v) == -1)
+            {
+                IncidenceMatrix vComponentIMatrix = new IncidenceMatrix();
+                return vComponentIMatrix;
+            }
+
             ISet<Vertex> vComponent = getComponentOf(v);
 
             // vertices to be removed from incidince matrix to form one for component

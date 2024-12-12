@@ -56,11 +56,75 @@ namespace GraphTheoristSketchpad.Logic
 
         public void CartesianProduct(Vertex v1, Vertex v2)
         {
+            if (v1 == null || v2 == null)
+                return;
+
             IncidenceMatrix v1Component = this.incidenceMatrix.getComponentMatrixOf(v1);
             IncidenceMatrix v2Component = this.incidenceMatrix.getComponentMatrixOf(v2);
 
             List<Vertex> v1Vertices = v1Component.getVertexList();
             List<Vertex> v2Vertices = v2Component.getVertexList();
+
+            // edge cases where a vertex is the entire component
+            if(v1Vertices.Count() == 0 && v2Vertices.Count() == 0)
+            {
+                this.Vertices.Clear();
+
+                Vertex newVertex = new Vertex(
+                        (v1.Location.X + v2.Location.X) / 2,
+                        (v1.Location.Y + v2.Location.Y) / 2);
+                newVertex.Label = v1.Label + v2.Label;
+
+                this.Vertices.Add(newVertex);
+                this.incidenceMatrix = new IncidenceMatrix();
+
+                OnGraphChanged();
+                return;
+            }
+            else if(v1Vertices.Count() == 0)
+            {
+                this.Vertices.Clear();
+                List<Vertex> newVertices = new List<Vertex>();
+
+                foreach (Vertex v2CompVertex in v2Vertices)
+                {
+                    Vertex newVertex = new Vertex(
+                        (v1.Location.X + v2CompVertex.Location.X) / 2,
+                        (v1.Location.Y + v2CompVertex.Location.Y) / 2);
+                    newVertex.Label = v1.Label + v2CompVertex.Label;
+
+                    newVertices.Add(newVertex);
+                    this.Vertices.Add(newVertex);
+                }
+
+                v2Component.replaceVertexList(newVertices);
+                this.incidenceMatrix = v2Component;
+
+                OnGraphChanged();
+                return;
+            }
+            else if (v2Vertices.Count() == 0)
+            {
+                this.Vertices.Clear();
+                List<Vertex> newVertices = new List<Vertex>();
+
+                foreach (Vertex v1CompVertex in v1Vertices)
+                {
+                    Vertex newVertex = new Vertex(
+                        (v1CompVertex.Location.X + v2.Location.X) / 2,
+                        (v1CompVertex.Location.Y + v2.Location.Y) / 2);
+                    newVertex.Label = v1CompVertex.Label + v2.Label;
+
+                    newVertices.Add(newVertex);
+                    this.Vertices.Add(newVertex);
+                }
+
+                v1Component.replaceVertexList(newVertices);
+                this.incidenceMatrix = v1Component;
+
+                OnGraphChanged();
+                return;
+            }
 
             // v1 vertex to component
             Dictionary<Vertex, List<Vertex>> v1ToComponent = new Dictionary<Vertex, List<Vertex>>();
