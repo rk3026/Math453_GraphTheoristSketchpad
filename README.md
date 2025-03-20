@@ -7,6 +7,8 @@
 ## 📌 Description:
 An intuitive application for creating, visualizing, and analyzing graphs, built in C# using WinForms.
 
+Credit to [ScottPlot](https://scottplot.net/) for providing the library used to plot points in our graph application.
+
 ## 🚀 Features:
 - **Graph Creation:** Add and remove vertices and edges, including parallel edges, loops, and directed edges.
 - **Graph Manipulation:** Reposition vertices and edges by click-and-drag.
