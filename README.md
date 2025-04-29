@@ -5,7 +5,7 @@
 - **Dylan Gyori** — [GitHub](https://github.com/JustDylan)
 
 ## 📌 Description:
-An intuitive application for creating, visualizing, and analyzing graphs, built in C# using WinForms.
+An intuitive application for creating, visualizing, and analyzing graphs, built in C# using WPF.
 
 Credit to [ScottPlot](https://scottplot.net/) for providing the library used to plot points in our graph application.
 
